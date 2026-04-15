@@ -208,8 +208,8 @@ tr.deleted-row{display:none}
     <div style="display:flex;justify-content:space-between;margin-top:1px"><span style="font-size:9px;color:var(--hint)">-20%</span><span style="font-size:9px;color:var(--hint)">+100%</span></div>
   </div>
   <div class="sidebar-section">
-    <div class="ctrl-row"><span class="ctrl-label">Global Min CM%</span><span class="ctrl-val" id="v-gc">65%</span></div>
-    <input type="range" id="global-cm" min="0" max="90" step="1" value="65" oninput="onGC(this.value)">
+    <div class="ctrl-row"><span class="ctrl-label">Global Min CM%</span><span class="ctrl-val" id="v-gc">0%</span></div>
+    <input type="range" id="global-cm" min="0" max="90" step="1" value="0" oninput="onGC(this.value)">
     <div style="display:flex;justify-content:space-between;margin-top:1px"><span style="font-size:9px;color:var(--hint)">0%</span><span style="font-size:9px;color:var(--hint)">90%</span></div>
     <div style="margin-top:5px;font-size:10px;color:var(--muted)">Raises price on any product below this CM floor</div>
   </div>
@@ -306,7 +306,7 @@ const COMPETITORS = {"107": {"note": "Trace mineral concentrates \u2014 ionic mi
 
 let products = PRODUCTS_ORIG.map(p => ({...p})); // mutable copy
 let state = {
-  globalPct: 0, globalMinCM: 65,
+  globalPct: 0, globalMinCM: 0,
   catRules: {}, overrides: {}, deleted: new Set(),
   filter: 'all', expanded: new Set()
 };
@@ -412,7 +412,7 @@ function applyPreset(pct, minCM) {
   refresh();
 }
 function resetAll() {
-  state={globalPct:0,globalMinCM:65,catRules:{},overrides:{},deleted:new Set(),filter:'all',expanded:new Set()};
+  state={globalPct:0,globalMinCM:0,catRules:{},overrides:{},deleted:new Set(),filter:'all',expanded:new Set()};
   document.getElementById('global-pct').value=0; document.getElementById('v-gp').textContent='0%';
   document.getElementById('global-cm').value=65; document.getElementById('v-gc').textContent='65%';
   // Restore all original COGS
