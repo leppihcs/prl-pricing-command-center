@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRL Pricing Command Center 2026</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f4f0;color:#1a1a18;font-size:13px}
+:root{--blue:#1F4E79;--green:#27500a;--red:#791f1f;--amber:#633806;--purple:#3c3489;--teal:#0f6e56;
+--bg:#f5f4f0;--card:#fff;--border:#e8e8e4;--muted:#6b6b67;--hint:#9b9b97}
+
+.app{display:grid;grid-template-rows:auto auto 1fr;height:100vh;overflow:hidden}
+.topbar{background:var(--blue);color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar h1{font-size:16px;font-weight:500}
+.topbar-meta{font-size:11px;opacity:.65}
+
+/* Summary bar */
+.summary-bar{background:#fff;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:20px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.sum-item{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:72px}
+.sum-num{font-size:20px;font-weight:500}
+.sum-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.sum-num.green{color:var(--green)} .sum-num.red{color:var(--red)} .sum-num.amber{color:var(--amber)} .sum-num.blue{color:var(--blue)} .sum-num.purple{color:var(--purple)}
+.sum-divider{width:1px;height:36px;background:var(--border)}
+.main{display:flex;overflow:hidden;flex:1}
+
+/* Sidebar */
+.sidebar{width:290px;background:#fff;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar-section{padding:12px 14px;border-bottom:1px solid var(--border)}
+.sidebar-title{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px}
+.ctrl-label{font-size:12px;color:#1a1a18;flex:1}
+.ctrl-val{font-size:12px;font-weight:500;color:var(--blue);min-width:36px;text-align:right}
+input[type=range]{width:100%;height:4px;-webkit-appearance:none;background:#e0ddd8;border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--blue);cursor:pointer}
+input[type=number]{padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;text-align:center;outline:none;background:#fff}
+input[type=number]:focus{border-color:var(--blue)}
+input[type=text]{padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:11px;outline:none;background:#fff;width:100%}
+input[type=text]:focus{border-color:var(--blue)}
+select{padding:4px 6px;border:1px solid var(--border);border-radius:6px;font-size:11px;background:#fff;outline:none;cursor:pointer;color:#1a1a18}
+.btn{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:#fff;font-size:11px;cursor:pointer;color:#1a1a18;transition:all .12s;font-weight:500}
+.btn:hover{background:#f5f4f0;border-color:#aaa}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:#174075}
+.btn-danger{background:#fcebeb;color:var(--red);border-color:#f7c1c1}
+.btn-danger:hover{background:#f7c1c1}
+.btn-sm{padding:2px 8px;font-size:10px}
+.btn-icon{background:none;border:none;cursor:pointer;padding:2px 4px;font-size:13px;opacity:.45;transition:opacity .12s;flex-shrink:0}
+.btn-icon:hover{opacity:1}
+.btn-icon.locked{opacity:1;color:var(--purple)}
+.btn-icon.delete:hover{color:var(--red);opacity:1}
+.btn-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500;white-space:nowrap}
+.tag.green{background:#eaf3de;color:var(--green)} .tag.red{background:#fcebeb;color:var(--red)}
+.tag.blue{background:#e6f1fb;color:#0c447c} .tag.amber{background:#faeeda;color:var(--amber)}
+.tag.purple{background:#eeedfe;color:var(--purple)} .tag.teal{background:#e1f5ee;color:var(--teal)}
+.tag.gray{background:#f1efe8;color:#5f5e5a}
+
+/* Content */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;gap:2px;padding:10px 16px 0;background:#fff;border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{padding:7px 16px;border-radius:8px 8px 0 0;border:none;background:transparent;cursor:pointer;font-size:12px;color:var(--muted);font-weight:500;transition:all .12s;border-bottom:2px solid transparent}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);background:#f0f5fb}
+.tab-body{flex:1;overflow:hidden;display:none}
+.tab-body.active{display:flex;flex-direction:column;overflow:hidden}
+
+/* Filters */
+.filter-bar{padding:8px 14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);background:#fafaf8;flex-shrink:0}
+.filter-chip{padding:4px 11px;border-radius:16px;border:1px solid var(--border);background:#fff;font-size:11px;cursor:pointer;color:var(--muted);transition:all .12s}
+.filter-chip:hover{border-color:#aaa;color:#1a1a18}
+.filter-chip.active{background:#1a1a18;color:#fff;border-color:#1a1a18}
+.search-box{padding:4px 10px;border:1px solid var(--border);border-radius:16px;font-size:11px;outline:none;width:170px;background:#fff}
+.search-box:focus{border-color:var(--blue)}
+.filter-sep{width:1px;height:18px;background:var(--border)}
+
+/* Cards */
+.cards-wrap{flex:1;overflow-y:auto;padding:10px 14px}
+.section-hdr{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:10px 0 5px;display:flex;align-items:center;gap:5px}
+.section-hdr span{font-weight:400;color:var(--hint)}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:8px;margin-bottom:2px}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:box-shadow .15s,border-color .15s}
+.pcard:hover{border-color:#c8c8c4;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.pcard.locked{border-color:#7F77DD;border-width:2px}
+.pcard.deleted{display:none}
+.pcard-head{padding:9px 12px 5px;display:flex;justify-content:space-between;align-items:flex-start;gap:5px}
+.pcard-name{font-size:12px;font-weight:500;color:#1a1a18;line-height:1.3;flex:1}
+.pcard-prl{font-size:10px;color:var(--hint)}
+.pcard-badges{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+.pcard-actions{display:flex;align-items:center;gap:2px;flex-shrink:0}
+.pcard-metrics{padding:2px 12px 5px;display:flex;gap:12px;flex-wrap:wrap}
+.metric{display:flex;flex-direction:column;gap:1px}
+.metric-lbl{font-size:9px;color:var(--hint);text-transform:uppercase;letter-spacing:.04em}
+.metric-val{font-size:13px;font-weight:500;color:#1a1a18}
+.metric-val.changed{color:var(--blue)} .metric-val.warn{color:var(--red)} .metric-val.good{color:var(--green)}
+/* CM bar */
+.cm-bar-wrap{padding:0 12px 3px}
+.cm-label-row{display:flex;justify-content:space-between;margin-bottom:2px}
+.cm-label{font-size:9px;color:var(--muted)}
+.cm-bar{height:5px;background:#e8e8e4;border-radius:3px;overflow:hidden;position:relative}
+.cm-fill{height:100%;border-radius:3px;transition:width .2s}
+.cm-target-line{position:absolute;top:0;bottom:0;width:1px;background:#1a1a18;opacity:.25}
+/* Slider + manual input */
+.slider-wrap{padding:3px 12px 6px}
+.slider-row{display:flex;align-items:center;gap:6px}
+.slider-row input[type=range]{flex:1}
+.ws-input{width:64px;padding:3px 6px;border:1px solid var(--blue);border-radius:6px;font-size:12px;text-align:center;outline:none;font-weight:500;color:var(--blue)}
+.ws-input:focus{box-shadow:0 0 0 2px rgba(31,78,121,.15)}
+.slider-sub{display:flex;justify-content:space-between;margin-top:2px;gap:4px;flex-wrap:wrap}
+.slider-sub span{font-size:9px;color:var(--hint)}
+.card-btn-row{padding:0 12px 6px;display:flex;gap:5px;align-items:center}
+/* Comp section */
+.comp-section{border-top:1px solid var(--border);padding:7px 12px;display:none}
+.pcard.expanded .comp-section{display:block}
+.comp-toggle{width:100%;background:none;border:none;cursor:pointer;font-size:10px;color:var(--muted);padding:3px 12px;text-align:center;border-top:1px solid var(--border);display:block}
+.comp-toggle:hover{color:#1a1a18;background:#fafaf8}
+.range-bar-wrap{margin:6px 0 2px}
+.range-title{font-size:10px;color:var(--muted);margin-bottom:3px}
+.range-bar{position:relative;height:22px;background:#f0ede8;border-radius:5px}
+.range-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:11px;height:11px;border-radius:50%;border:2px solid #fff;z-index:2;cursor:default}
+.range-dot.retail{background:var(--blue)}
+.range-dot.map{background:var(--purple)}
+.range-tick{position:absolute;top:4px;bottom:4px;width:2px;background:rgba(0,0,0,.18);transform:translateX(-50%);border-radius:1px}
+.range-labels{display:flex;justify-content:space-between;margin-top:2px}
+.range-lbl{font-size:9px;color:var(--hint)}
+.comp-list{margin-top:5px}
+.comp-row{display:flex;gap:4px;align-items:center;padding:3px 0;border-bottom:1px solid #f8f7f4;flex-wrap:wrap}
+.comp-row:last-child{border-bottom:none}
+.comp-name{font-size:10px;color:#1a1a18;flex:1;min-width:100px}
+.comp-price{font-size:10px;font-weight:500;color:#1a1a18}
+.comp-dose{font-size:9px;color:var(--muted)}
+.comp-quality{font-size:9px;padding:1px 5px;border-radius:6px}
+.comp-quality.Premium{background:#e6f1fb;color:#0c447c}
+.comp-quality.Mid-Tier{background:#faeeda;color:var(--amber)}
+.comp-quality.Budget{background:#f1f1ef;color:var(--muted)}
+.approx-badge{font-size:9px;padding:1px 5px;background:#fff3cd;color:#664d03;border-radius:6px;border:1px solid #ffda6a}
+.approx-note{font-size:9px;color:var(--amber);margin-top:4px;font-style:italic}
+.no-comp{font-size:10px;color:var(--muted);font-style:italic;padding:4px 0;text-align:center}
+.legend-row{display:flex;gap:10px;margin-top:5px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid #fff}
+
+/* Grid */
+.grid-controls{padding:8px 14px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border);background:#fafaf8;flex-shrink:0;flex-wrap:wrap}
+.table-wrap{flex:1;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{position:sticky;top:0;background:#fff;padding:7px 8px;text-align:left;font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;z-index:1}
+th:hover{color:#1a1a18}
+td{padding:6px 8px;border-bottom:1px solid #f5f5f2;white-space:nowrap;vertical-align:middle}
+tr:hover td{background:#fafaf8}
+tr.locked-row td{background:#f8f7ff}
+tr.deleted-row{display:none}
+.td-name{max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.cell-cm{display:flex;align-items:center;gap:5px}
+.mini-bar{width:44px;height:5px;background:#e8e8e4;border-radius:3px;overflow:hidden;flex-shrink:0}
+.mini-fill{height:100%;border-radius:3px}
+.cell-green{color:var(--green);font-weight:500} .cell-red{color:var(--red);font-weight:500}
+.cell-blue{color:var(--blue);font-weight:500} .cell-amber{color:var(--amber);font-weight:500}
+.grid-ws-input{width:68px;padding:2px 5px;border:1px solid var(--blue);border-radius:4px;font-size:11px;text-align:center;outline:none;color:var(--blue);font-weight:500}
+.grid-restore-btn{font-size:10px;padding:1px 6px;border:1px solid #d1d1cb;border-radius:4px;cursor:pointer;background:#fff;color:var(--muted);margin-left:3px}
+.grid-restore-btn:hover{color:var(--red);border-color:#f7c1c1}
+.grid-delete-btn{font-size:12px;padding:1px 4px;border:none;background:none;cursor:pointer;color:var(--muted);opacity:.4}
+.grid-delete-btn:hover{color:var(--red);opacity:1}
+.tfoot-summary{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--border)}
+.tfoot-summary td{font-weight:500;padding:7px 8px}
+.no-data{padding:40px;text-align:center;color:var(--muted);font-size:12px}
+.export-btn{margin-left:auto}
+.cat-rule-item{display:flex;gap:4px;align-items:center;margin-bottom:5px;background:#fafaf8;border-radius:6px;padding:4px 8px;border:1px solid var(--border)}
+.deleted-chip{font-size:10px;padding:3px 8px;background:#fcebeb;color:var(--red);border-radius:16px;cursor:pointer}
+.deleted-chip:hover{background:#f7c1c1}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="topbar">
+  <div>
+    <div style="font-size:16px;font-weight:500">PRL Pricing Command Center — 2026</div>
+    <div class="topbar-meta" id="topbar-meta">151 products · Updated COGs baked in · Confidential</div>
+  </div>
+  <div style="display:flex;gap:6px">
+    <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="resetAll()">↺ Reset All</button>
+    <button class="btn btn-sm" style="background:#fff;color:var(--blue)" onclick="applyAll()">✓ Apply Rules</button>
+  </div>
+</div>
+
+<div class="summary-bar">
+  <div class="sum-item"><div class="sum-num blue" id="s-total">–</div><div class="sum-label">Active Products</div></div>
+  <div class="sum-divider"></div>
+  <div class="sum-item"><div class="sum-num green" id="s-above">–</div><div class="sum-label">Above CM Target</div></div>
+  <div class="sum-item"><div class="sum-num red" id="s-below">–</div><div class="sum-label">Below Target</div></div>
+  <div class="sum-item"><div class="sum-num amber" id="s-avgcm">–</div><div class="sum-label">Avg New CM%</div></div>
+  <div class="sum-divider"></div>
+  <div class="sum-item"><div class="sum-num blue" id="s-avgws">–</div><div class="sum-label">Avg New WS</div></div>
+  <div class="sum-item"><div class="sum-num green" id="s-uplift">–</div><div class="sum-label">Avg WS Uplift</div></div>
+  <div class="sum-divider"></div>
+  <div class="sum-item"><div class="sum-num purple" id="s-locked">0</div><div class="sum-label">Locked</div></div>
+  <div class="sum-item"><div class="sum-num purple" id="s-manual">0</div><div class="sum-label">Manual</div></div>
+  <div class="sum-item"><div class="sum-num red" id="s-deleted">0</div><div class="sum-label">Deleted</div></div>
+  <div id="restore-wrap" style="display:none;margin-left:4px"></div>
+</div>
+
+<div class="main">
+<div class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-title">🌐 Global Controls</div>
+    <div class="ctrl-row"><span class="ctrl-label">Flat % increase/decrease</span><span class="ctrl-val" id="v-gp">0%</span></div>
+    <input type="range" id="global-pct" min="-20" max="100" step="1" value="0" oninput="onGP(this.value)">
+    <div style="display:flex;justify-content:space-between;margin-top:1px"><span style="font-size:9px;color:var(--hint)">-20%</span><span style="font-size:9px;color:var(--hint)">+100%</span></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="ctrl-row"><span class="ctrl-label">Global Min CM%</span><span class="ctrl-val" id="v-gc">65%</span></div>
+    <input type="range" id="global-cm" min="0" max="90" step="1" value="65" oninput="onGC(this.value)">
+    <div style="display:flex;justify-content:space-between;margin-top:1px"><span style="font-size:9px;color:var(--hint)">0%</span><span style="font-size:9px;color:var(--hint)">90%</span></div>
+    <div style="margin-top:5px;font-size:10px;color:var(--muted)">Raises price on any product below this CM floor</div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title">📂 Category Overrides</div>
+    <select id="cat-sel" style="width:100%;margin-bottom:5px"><option value="">Select category…</option></select>
+    <div style="display:flex;gap:4px;align-items:center;margin-bottom:6px">
+      <select id="cat-type"><option value="pct">Flat %</option><option value="minCM">Min CM%</option><option value="ignore">Ignore (use global)</option></select>
+      <input type="number" id="cat-val" min="0" max="100" step="1" value="10" style="width:52px">
+      <button class="btn btn-sm btn-primary" onclick="addCatRule()">Add</button>
+    </div>
+    <div id="cat-rules"></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title">⚡ Quick Presets</div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <button class="btn" style="text-align:left;font-size:11px" onclick="applyPreset(5,65)">Conservative — 5% + 65% CM floor</button>
+      <button class="btn" style="text-align:left;font-size:11px" onclick="applyPreset(10,65)">Moderate — 10% + 65% CM floor</button>
+      <button class="btn" style="text-align:left;font-size:11px" onclick="applyPreset(15,70)">Aggressive — 15% + 70% CM floor</button>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-title">ℹ️ Rule Priority</div>
+    <div style="font-size:10px;color:var(--muted);line-height:1.7">
+      1. 🔒 <strong>Locked</strong> — price fixed, never changes<br>
+      2. ✏ <strong>Manual</strong> — you set it via slider/input<br>
+      3. 📂 <strong>Category</strong> rule overrides global<br>
+      4. 🌐 <strong>Global</strong> flat % + min CM floor
+    </div>
+  </div>
+  <div class="sidebar-section" style="margin-top:auto">
+    <div class="btn-row">
+      <button class="btn btn-danger" style="flex:1" onclick="resetAll()">Reset All</button>
+      <button class="btn btn-primary" style="flex:1" onclick="applyAll()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('cards',this)">📦 Product Simulator</button>
+    <button class="tab" onclick="showTab('grid',this)">📊 Price Grid</button>
+  </div>
+
+  <!-- CARDS TAB -->
+  <div class="tab-body active" id="tab-cards">
+    <div class="filter-bar">
+      <button class="filter-chip active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-chip" onclick="setFilter('below',this)">Below CM Target</button>
+      <button class="filter-chip" onclick="setFilter('changed',this)">Changed</button>
+      <button class="filter-chip" onclick="setFilter('locked',this)">Locked</button>
+      <button class="filter-chip" onclick="setFilter('approx',this)">⚠ Approx Competitors</button>
+      <div class="filter-sep"></div>
+      <input type="text" class="search-box" id="card-search" placeholder="Search product…" oninput="renderCards()">
+    </div>
+    <div class="cards-wrap" id="cards-wrap"></div>
+  </div>
+
+  <!-- GRID TAB -->
+  <div class="tab-body" id="tab-grid">
+    <div class="grid-controls">
+      <input type="text" class="search-box" id="grid-search" placeholder="Search…" oninput="renderGrid()">
+      <select id="grid-cat" onchange="renderGrid()"><option value="">All Categories</option></select>
+      <select id="grid-sort" onchange="renderGrid()">
+        <option value="prl">PRL #</option><option value="name">Name</option>
+        <option value="cm">CM% ↑</option><option value="cm-desc">CM% ↓</option>
+        <option value="uplift">$ Uplift ↓</option><option value="ws">Curr WS ↑</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);cursor:pointer">
+        <input type="checkbox" id="show-deleted" onchange="renderGrid()"> Show deleted
+      </label>
+      <button class="btn export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>PRL #</th><th>Product</th><th>Category</th><th title="Click any COGS value to edit">COGS <span style="color:var(--amber);font-size:9px">✎</span></th>
+          <th>Curr WS</th><th>New WS</th><th>$ Incr</th><th>% Incr</th>
+          <th>Retail ×2</th><th>MAP ×2.2</th><th>Curr CM%</th><th>New CM%</th>
+          <th>Status</th><th></th>
+        </tr></thead>
+        <tbody id="grid-body"></tbody>
+        <tfoot class="tfoot-summary"><tr id="grid-footer"></tr></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+const PRODUCTS_ORIG = [{"prl": 107, "name": "Premier pH Minerals (2 fl oz)", "cogs": 1.81, "ws": 6.98, "cat": "Minerals & Vitamins"}, {"prl": 111, "name": "Premier pH Minerals (8 fl oz)", "cogs": 5.79, "ws": 13.98, "cat": "Minerals & Vitamins"}, {"prl": 120, "name": "Premier Calcium Magnesium (8oz)", "cogs": 5.88, "ws": 17.48, "cat": "Minerals & Vitamins"}, {"prl": 140, "name": "Premier Calcium Magnesium Plus (90 Caps)", "cogs": 2.81, "ws": 17.48, "cat": "Minerals & Vitamins"}, {"prl": 161, "name": "Premier DHA (60 Caps)", "cogs": 8.34, "ws": 20.48, "cat": "Omega & Fatty Acids"}, {"prl": 318, "name": "Aloe Powder - Mixed Berry", "cogs": 13.61, "ws": 26.48, "cat": "Greens & Superfoods"}, {"prl": 462, "name": "Premier CoQ-10 (50 Caps 100mg)", "cogs": 3.56, "ws": 14.98, "cat": "Antioxidants"}, {"prl": 470, "name": "Premier Glutathione Complex (60 caps)", "cogs": 5.79, "ws": 16.48, "cat": "Antioxidants"}, {"prl": 481, "name": "Tranquinol (90 caps)", "cogs": 8.75, "ws": 20.98, "cat": "Herbals & Adaptogens"}, {"prl": 510, "name": "Premier NADH (30 Caps)", "cogs": 8.29, "ws": 17.48, "cat": "Antioxidants"}, {"prl": 840, "name": "Premier Glutamine (100 Caps)", "cogs": 3.41, "ws": 11.98, "cat": "Amino Acids & Protein"}, {"prl": 841, "name": "Premier Glutamine (Powder)", "cogs": 5.93, "ws": null, "cat": "Amino Acids & Protein"}, {"prl": 910, "name": "Premier Creatine", "cogs": 4.58, "ws": 10.48, "cat": "Amino Acids & Protein"}, {"prl": 955, "name": "Premier Whey Protein (16.8 oz)", "cogs": 13.21, "ws": 18.48, "cat": "Amino Acids & Protein"}, {"prl": 1150, "name": "Magnesium Glycinate", "cogs": 3.1, "ws": 8.48, "cat": "Minerals & Vitamins"}, {"prl": 1190, "name": "Liquid Zinc Ultra (8oz)", "cogs": 2.25, "ws": 12.98, "cat": "Minerals & Vitamins"}, {"prl": 1205, "name": "Premier Vitamin D3+K2 (30 Caps)", "cogs": 6.2, "ws": 24.98, "cat": "D3 & Vitamins"}, {"prl": 1210, "name": "Premier Vegan D3/K2 (60 caps)", "cogs": 8.57, "ws": 27.98, "cat": "D3 & Vitamins"}, {"prl": 1330, "name": "Vitamin D3 for Kids", "cogs": 1.93, "ws": 6.98, "cat": "D3 & Vitamins"}, {"prl": 1335, "name": "D3 Serum (.43 fl oz) Olive Oil", "cogs": 1.71, "ws": 8.98, "cat": "D3 & Vitamins"}, {"prl": 1345, "name": "EPA/DHA Marine (90 Softgels)", "cogs": 9.78, "ws": 19.98, "cat": "Omega & Fatty Acids"}, {"prl": 1348, "name": "EPA/DHA Marine Liquid (8oz)", "cogs": 7.8, "ws": 19.98, "cat": "Omega & Fatty Acids"}, {"prl": 1375, "name": "Deltanol (60 Caps)", "cogs": 0.07, "ws": 21.48, "cat": "Omega & Fatty Acids"}, {"prl": 1500, "name": "Premier Oregano Oil (0.5 fl oz)", "cogs": 2.83, "ws": 7.98, "cat": "Herbals & Adaptogens"}, {"prl": 1505, "name": "Premier Organic Castor Oil (8 fl oz)", "cogs": 2.95, "ws": 9.98, "cat": "External Use"}, {"prl": 1536, "name": "QC Oil Blend (1 fl oz) External", "cogs": 4.68, "ws": 18.98, "cat": "External Use"}, {"prl": 2075, "name": "Premier Multi-Vitamin (120 caps)", "cogs": 10.49, "ws": 22.98, "cat": "Multivitamins"}, {"prl": 2081, "name": "Premier Daily One (60 Caps)", "cogs": 4.21, "ws": 14.48, "cat": "Multivitamins"}, {"prl": 2085, "name": "PQQ Complex (60 Caps)", "cogs": 6.75, "ws": 19.48, "cat": "Antioxidants"}, {"prl": 2086, "name": "Phyto Methylate (60 Caps)", "cogs": 5.45, "ws": 15.48, "cat": "Multivitamins"}, {"prl": 2090, "name": "Red Deer Antler Velvet (30 Caps)", "cogs": null, "ws": 22.98, "cat": "Men's Health"}, {"prl": 2091, "name": "Men's Performance Edge (60 Caps)", "cogs": 7.28, "ws": 16.98, "cat": "Men's Health"}, {"prl": 2093, "name": "Testosterone Premium (90 Caps)", "cogs": 18.04, "ws": 37.98, "cat": "Men's Health"}, {"prl": 2094, "name": "CircuZyme (60 Caps)", "cogs": 7.05, "ws": 26.48, "cat": "Cardiovascular"}, {"prl": 2096, "name": "Amino hGH (105 Caps)", "cogs": 5.85, "ws": 15.98, "cat": "Amino Acids & Protein"}, {"prl": 2099, "name": "Premier Taurine Blend (90 Caps)", "cogs": 4.01, "ws": 8.48, "cat": "Amino Acids & Protein"}, {"prl": 2100, "name": "Tyrosine Matrix (90 Caps)", "cogs": 6.24, "ws": 12.98, "cat": "Brain & Cognition"}, {"prl": 2101, "name": "Premier Aminos Mixed Berry (225g)", "cogs": null, "ws": 19.98, "cat": "Amino Acids & Protein"}, {"prl": 2102, "name": "Premier Aminos Unflavored (186g)", "cogs": 3.0, "ws": 19.98, "cat": "Amino Acids & Protein"}, {"prl": 2120, "name": "ImmunoVen (90 Caps)", "cogs": 2.9, "ws": 15.48, "cat": "Organ Support"}, {"prl": 2124, "name": "Galactan (8 oz)", "cogs": 7.84, "ws": 17.48, "cat": "Digestive Health"}, {"prl": 2130, "name": "Lean Advantage (90 Caps)", "cogs": 7.0, "ws": 19.48, "cat": "Weight & Metabolism"}, {"prl": 2150, "name": "NeuroVen (60 Caps)", "cogs": 5.28, "ws": 19.48, "cat": "Brain & Cognition"}, {"prl": 2158, "name": "Paratosin (90 Caps)", "cogs": 6.51, "ws": 17.48, "cat": "Digestive Health"}, {"prl": 2160, "name": "ParaStat (90 Caps)", "cogs": 3.08, "ws": 18.48, "cat": "Digestive Health"}, {"prl": 2167, "name": "Premier Aloe (30 Caps)", "cogs": 3.76, "ws": 7.98, "cat": "Digestive Health"}, {"prl": 2171, "name": "Premier NAC (60 caps)", "cogs": 2.46, "ws": 9.98, "cat": "Antioxidants"}, {"prl": 2174, "name": "AllerCaps (90 Caps)", "cogs": 6.34, "ws": 26.48, "cat": "Immune Support"}, {"prl": 2175, "name": "Adaptogen-R3 (90 Caps)", "cogs": 5.49, "ws": 17.48, "cat": "Herbals & Adaptogens"}, {"prl": 2177, "name": "Premier HCL (90 Caps)", "cogs": 1.97, "ws": 10.48, "cat": "Digestive Health"}, {"prl": 2178, "name": "Premier HCL Activator (90 Caps)", "cogs": 2.85, "ws": 10.48, "cat": "Digestive Health"}, {"prl": 2179, "name": "Betaine HCL 90-Day Supply", "cogs": 3.48, "ws": null, "cat": "Digestive Health"}, {"prl": 2182, "name": "UriVen (60 Caps)", "cogs": 3.2, "ws": 14.98, "cat": "Organ Support"}, {"prl": 2184, "name": "ErythroPro (60 Caps)", "cogs": 3.06, "ws": 14.48, "cat": "Women's Health"}, {"prl": 2185, "name": "Premier B.P. Complex (60 Caps)", "cogs": 2.99, "ws": 14.98, "cat": "Cardiovascular"}, {"prl": 2188, "name": "Premier Phyto-Iron (120 caps)", "cogs": 6.52, "ws": 12.98, "cat": "Minerals & Vitamins"}, {"prl": 2191, "name": "CereVen (60 Caps)", "cogs": 8.03, "ws": 20.98, "cat": "Brain & Cognition"}, {"prl": 2193, "name": "CogniTropic (120 caps)", "cogs": 9.46, "ws": 25.48, "cat": "Brain & Cognition"}, {"prl": 2200, "name": "Premier Complete B (60 Caps)", "cogs": 3.7, "ws": 13.98, "cat": "Multivitamins"}, {"prl": 2300, "name": "Premier Plant Vitamin C (60 Caps)", "cogs": 3.21, "ws": 16.98, "cat": "Multivitamins"}, {"prl": 2305, "name": "Premier Green Tea Extract (120 Caps)", "cogs": 5.75, "ws": 12.48, "cat": "Antioxidants"}, {"prl": 2310, "name": "Medi-Chlorella-FX (120 caps)", "cogs": 5.05, "ws": 14.48, "cat": "Greens & Superfoods"}, {"prl": 2338, "name": "B12-ND (2 fl oz)", "cogs": 2.68, "ws": 12.48, "cat": "Proprietary ND"}, {"prl": 2345, "name": "HM-ND (8 fl oz)", "cogs": 4.4, "ws": 20.48, "cat": "Proprietary ND"}, {"prl": 2346, "name": "Fermented Cardio-ND (8 fl oz)", "cogs": 3.9, "ws": 26.48, "cat": "Proprietary ND"}, {"prl": 2347, "name": "Green Tea-ND (8 fl oz)", "cogs": 7.26, "ws": 23.48, "cat": "Proprietary ND"}, {"prl": 2350, "name": "Liver-ND (8 fl oz)", "cogs": 3.41, "ws": 20.98, "cat": "Proprietary ND"}, {"prl": 2351, "name": "Max B-ND (8 oz)", "cogs": 5.57, "ws": 49.48, "cat": "Proprietary ND"}, {"prl": 2352, "name": "Max B-ND (2 oz)", "cogs": 2.17, "ws": 15.98, "cat": "Proprietary ND"}, {"prl": 2354, "name": "Melatonin-ND (2 oz)", "cogs": 1.64, "ws": 10.48, "cat": "Proprietary ND"}, {"prl": 2355, "name": "Fermented Gallbladder-ND (8 fl oz)", "cogs": 3.75, "ws": 20.98, "cat": "Proprietary ND"}, {"prl": 2363, "name": "Premier Joint and Disc (90 Caps)", "cogs": 9.35, "ws": 18.98, "cat": "Joints & Bones"}, {"prl": 2367, "name": "Premier Bone Health (90 Caps)", "cogs": 8.03, "ws": 18.38, "cat": "Joints & Bones"}, {"prl": 2368, "name": "Premier Resveratrol (8 fl oz)", "cogs": 6.51, "ws": 27.48, "cat": "Proprietary ND"}, {"prl": 2369, "name": "Nucleo Immune (90 Caps)", "cogs": 6.18, "ws": 19.98, "cat": "Immune Support"}, {"prl": 2371, "name": "AdrenaVen (60 Caps)", "cogs": 4.45, "ws": 14.98, "cat": "Organ Support"}, {"prl": 2400, "name": "Premier DHEA (60 Caps)", "cogs": 4.0, "ws": 10.48, "cat": "Men's Health"}, {"prl": 2402, "name": "OcuVen (60 Caps)", "cogs": 5.84, "ws": 19.48, "cat": "Organ Support"}, {"prl": 2406, "name": "Radiant Woman (90 Caps)", "cogs": 19.04, "ws": 37.98, "cat": "Women's Health"}, {"prl": 2407, "name": "Fem Balance-FX (60 Caps)", "cogs": 2.53, "ws": 14.48, "cat": "Women's Health"}, {"prl": 2411, "name": "BiliVen (60 Caps)", "cogs": 2.56, "ws": 19.48, "cat": "Organ Support"}, {"prl": 2434, "name": "Premier Organic Coffee Sidama", "cogs": null, "ws": 18.48, "cat": "Food & Spice"}, {"prl": 2445, "name": "CardioVen (60 Caps)", "cogs": 5.91, "ws": 22.48, "cat": "Cardiovascular"}, {"prl": 2447, "name": "Hyssinol (60 Caps)", "cogs": 3.88, "ws": 13.98, "cat": "Herbals & Adaptogens"}, {"prl": 2451, "name": "Estro Flavone (60 Caps)", "cogs": 4.34, "ws": 14.98, "cat": "Women's Health"}, {"prl": 2461, "name": "RenaVen (60 Caps)", "cogs": 3.62, "ws": 19.98, "cat": "Organ Support"}, {"prl": 2470, "name": "HepatoVen (60 Caps)", "cogs": 2.81, "ws": 19.98, "cat": "Organ Support"}, {"prl": 2480, "name": "PneumoVen (60 Caps)", "cogs": 4.15, "ws": 20.48, "cat": "Organ Support"}, {"prl": 2485, "name": "Ultra Pollen (60 Caps)", "cogs": 0.07, "ws": 16.48, "cat": "Men's Health"}, {"prl": 2500, "name": "Premier Noni (60 Caps)", "cogs": 2.62, "ws": 10.98, "cat": "Herbals & Adaptogens"}, {"prl": 2510, "name": "Olive Leaf Immune (60 Caps)", "cogs": 3.05, "ws": 14.98, "cat": "Immune Support"}, {"prl": 2515, "name": "PancreVen (120 Caps)", "cogs": 2.5, "ws": 14.98, "cat": "Organ Support"}, {"prl": 2520, "name": "Premier Berberine", "cogs": 7.29, "ws": 15.98, "cat": "Herbals & Adaptogens"}, {"prl": 2522, "name": "Premier Glucose Manager", "cogs": 15.34, "ws": 29.98, "cat": "Weight & Metabolism"}, {"prl": 2530, "name": "Premier Pregnenolone (60 Caps)", "cogs": 11.45, "ws": 22.48, "cat": "Men's Health"}, {"prl": 2534, "name": "Hair, Skin & Nails (60 Caps)", "cogs": 7.59, "ws": 20.98, "cat": "Women's Health"}, {"prl": 2536, "name": "Propolis Immune (60 Caps)", "cogs": 3.73, "ws": 9.48, "cat": "Immune Support"}, {"prl": 2541, "name": "ProstaVen (90 Caps)", "cogs": 3.25, "ws": 17.48, "cat": "Organ Support"}, {"prl": 2551, "name": "XenoStat (90 Caps)", "cogs": 2.64, "ws": 14.48, "cat": "Detox & Specialty"}, {"prl": 2570, "name": "GastroVen (60 Caps)", "cogs": 5.77, "ws": 14.98, "cat": "Organ Support"}, {"prl": 2575, "name": "ThyroVen (60 Caps)", "cogs": 2.52, "ws": 14.98, "cat": "Organ Support"}, {"prl": 2578, "name": "Curcumin FX", "cogs": 7.1, "ws": 19.48, "cat": "Antioxidants"}, {"prl": 2580, "name": "Premier Turmeric (60 Caps)", "cogs": 1.65, "ws": 10.48, "cat": "Antioxidants"}, {"prl": 2582, "name": "AstaXanthin Complex (60 caps)", "cogs": 5.92, "ws": 11.48, "cat": "Antioxidants"}, {"prl": 2585, "name": "Premier Organic Greens (10 oz)", "cogs": 9.52, "ws": 22.98, "cat": "Greens & Superfoods"}, {"prl": 2586, "name": "Premier Greens Caps (150 Caps)", "cogs": 3.34, "ws": 15.98, "cat": "Greens & Superfoods"}, {"prl": 2591, "name": "Allicidin (60 Caps)", "cogs": 2.74, "ws": 17.48, "cat": "Immune Support"}, {"prl": 2600, "name": "Reishi Immune (90 Caps)", "cogs": 5.19, "ws": 14.98, "cat": "Immune Support"}, {"prl": 2610, "name": "Premier Lion's Mane", "cogs": 6.25, "ws": 15.98, "cat": "Immune Support"}, {"prl": 2680, "name": "Premier Probiotic (30 Softgels)", "cogs": 12.74, "ws": 28.48, "cat": "Probiotics"}, {"prl": 2685, "name": "MicroBiome-18 (30 Caps)", "cogs": 9.83, "ws": 22.48, "cat": "Probiotics"}, {"prl": 2690, "name": "Premier Probiotic (60 Softgels)", "cogs": 26.22, "ws": 49.98, "cat": "Probiotics"}, {"prl": 2695, "name": "Premier Probiotic Gummies", "cogs": 3.74, "ws": 10.48, "cat": "Probiotics"}, {"prl": 2750, "name": "Colostrum-IgG (90 Caps)", "cogs": 4.16, "ws": 11.48, "cat": "Probiotics"}, {"prl": 2760, "name": "Colostrum-IgG (4 oz)", "cogs": 12.55, "ws": 29.98, "cat": "Probiotics"}, {"prl": 2839, "name": "Medi-Clay-FX (90 Caps)", "cogs": 2.86, "ws": 17.48, "cat": "Detox & Specialty"}, {"prl": 2841, "name": "Premier Psyllium Fiber (180 Caps)", "cogs": 5.1, "ws": 12.48, "cat": "Digestive Health"}, {"prl": 2850, "name": "American Ginseng", "cogs": 8.1, "ws": 10.48, "cat": "Herbals & Adaptogens"}, {"prl": 2851, "name": "Premier L-Theanine", "cogs": 1.92, "ws": 10.48, "cat": "Brain & Cognition"}, {"prl": 2855, "name": "UltraGandha Capsules", "cogs": null, "ws": 13.48, "cat": "Herbals & Adaptogens"}, {"prl": 2858, "name": "Fermented Ashwagandha Capsules", "cogs": 5.25, "ws": 12.48, "cat": "Herbals & Adaptogens"}, {"prl": 2901, "name": "Fermented Turmeric/Ginger (4.7oz)", "cogs": 5.06, "ws": 16.98, "cat": "Fermented Powders"}, {"prl": 2902, "name": "Fermented Mushroom Blend (7.4oz)", "cogs": 8.9, "ws": 20.48, "cat": "Fermented Powders"}, {"prl": 2903, "name": "Fermented Beets (6.3oz)", "cogs": 7.43, "ws": 17.48, "cat": "Fermented Powders"}, {"prl": 2905, "name": "Fermented Greens Caps (150 Caps)", "cogs": 6.01, "ws": 19.98, "cat": "Greens & Superfoods"}, {"prl": 2940, "name": "Premier Apple Cider Vinegar (150 Caps)", "cogs": 3.99, "ws": 10.48, "cat": "Digestive Health"}, {"prl": 2944, "name": "Digestase-SP (60 Caps)", "cogs": 6.21, "ws": 18.48, "cat": "Digestive Health"}, {"prl": 2945, "name": "Premier Digest (60 Caps)", "cogs": 5.27, "ws": 16.48, "cat": "Digestive Health"}, {"prl": 2948, "name": "Digest 90-Day Supply", "cogs": 18.45, "ws": null, "cat": "Digestive Health"}, {"prl": 2950, "name": "Inflammacidin (90 caps)", "cogs": 9.32, "ws": 24.48, "cat": "Digestive Health"}, {"prl": 3669, "name": "Medi-Mineral Serum (8 fl oz)", "cogs": 3.26, "ws": 13.98, "cat": "External Use"}, {"prl": 3670, "name": "Medi-Body Bath (19 oz)", "cogs": 5.4, "ws": 10.48, "cat": "External Use"}, {"prl": 3672, "name": "Medi-Detox Pack (5 oz)", "cogs": 4.31, "ws": 19.98, "cat": "External Use"}, {"prl": 3678, "name": "Medi-Body Pack single serve", "cogs": 5.78, "ws": 19.48, "cat": "External Use"}, {"prl": 3685, "name": "Medi-Soak Cleanse (2 lbs)", "cogs": 4.06, "ws": 10.48, "cat": "External Use"}, {"prl": 4680, "name": "Premier Pink Salt (12 oz)", "cogs": 3.09, "ws": 11.48, "cat": "Food & Spice"}, {"prl": 4682, "name": "Premier Pink Salt (4 oz)", "cogs": 2.95, "ws": 6.48, "cat": "Food & Spice"}, {"prl": 4685, "name": "Microbiome Salt", "cogs": null, "ws": 12.48, "cat": "Food & Spice"}, {"prl": 4691, "name": "Hawaiian Red Seasoning Salt 12oz", "cogs": 10.2, "ws": 15.48, "cat": "Food & Spice"}, {"prl": 4692, "name": "Hawaiian Red Seasoning Salt 4oz", "cogs": 0.32, "ws": 7.48, "cat": "Food & Spice"}, {"prl": 4700, "name": "Organic Ginger Powder 4.6oz", "cogs": 4.86, "ws": 8.98, "cat": "Food & Spice"}, {"prl": 4705, "name": "Canadian Gold Honey (1 lb)", "cogs": 6.41, "ws": 13.98, "cat": "Food & Spice"}, {"prl": 4710, "name": "Organic Cayenne Powder (1.5 oz)", "cogs": 2.98, "ws": 4.48, "cat": "Food & Spice"}, {"prl": 4712, "name": "Organic Turmeric Powder (1.3 oz)", "cogs": 1.2, "ws": 4.48, "cat": "Food & Spice"}, {"prl": 4714, "name": "Organic Ginger Powder Spice (1.5 oz)", "cogs": 2.13, "ws": 4.48, "cat": "Food & Spice"}, {"prl": 5500, "name": "Cal-Mag Plus (300 Caps)", "cogs": 7.39, "ws": 49.48, "cat": "Minerals & Vitamins"}, {"prl": 5501, "name": "Premier Marine Collagen (10.6oz)", "cogs": 9.59, "ws": 26.98, "cat": "Joints & Bones"}, {"prl": 6502, "name": "Goat Milk for Pets 16oz", "cogs": 11.02, "ws": 14.48, "cat": "Pet Products"}, {"prl": 6504, "name": "Pumpkin Plus 6oz", "cogs": 8.3, "ws": 9.99, "cat": "Pet Products"}, {"prl": 6509, "name": "Pet Topper Fish 8oz", "cogs": 3.39, "ws": 14.05, "cat": "Pet Products"}, {"prl": 6511, "name": "Turkey Topper 8oz", "cogs": 4.21, "ws": 14.05, "cat": "Pet Products"}];
+const COMPETITORS = {"107": {"note": "Trace mineral concentrates \u2014 ionic minerals from natural salt sources", "comps": [{"name": "Trace Minerals ConcenTrace 2oz", "retail": 8.99, "servings": "N/A", "dose": "40 drops/serving", "quality": "Mid-Tier", "approximate": true}, {"name": "NOW Real Minerals Trace 2oz", "retail": 9.99, "servings": "N/A", "dose": "Multiple minerals", "quality": "Budget", "approximate": true}, {"name": "Eidon Ionic Minerals 2oz", "retail": 12.99, "servings": "N/A", "dose": "Ionic solution", "quality": "Mid-Tier", "approximate": true}]}, "111": {"note": "Trace mineral concentrates \u2014 ionic minerals, 8oz size", "comps": [{"name": "Trace Minerals ConcenTrace 8oz", "retail": 22.99, "servings": "N/A", "dose": "Full-spectrum", "quality": "Mid-Tier", "approximate": true}, {"name": "NOW Real Minerals 8oz", "retail": 18.99, "servings": "N/A", "dose": "Multiple minerals", "quality": "Budget", "approximate": true}, {"name": "BodyBio Liquid Minerals 8oz", "retail": 28.0, "servings": "N/A", "dose": "Ionic mineral blend", "quality": "Premium", "approximate": true}]}, "120": {"note": "Liquid Cal-Mag \u2014 calcium + magnesium in liquid form", "comps": [{"name": "NOW Calcium & Magnesium Liquid 16oz", "retail": 12.99, "servings": "N/A", "dose": "Each 1g Ca/500mg Mg", "quality": "Budget", "approximate": true}, {"name": "Pure Encap Cal-Mag Citrate (powder)", "retail": 28.0, "servings": 90, "dose": "Citrate form", "quality": "Premium", "approximate": true}, {"name": "Thorne Cal-Mag Citrate (powder)", "retail": 22.0, "servings": 90, "dose": "200mg each", "quality": "Premium", "approximate": true}]}, "140": {"note": "Calcium-magnesium blend caps \u2014 90 caps", "comps": [{"name": "NOW Cal-Mag Citrate 90ct", "retail": 16.99, "servings": 90, "dose": "333mg Ca + 167mg Mg", "quality": "Budget", "approximate": false}, {"name": "Pure Encap Cal/Mag (citrate)", "retail": 32.0, "servings": 90, "dose": "150mg Ca + 75mg Mg", "quality": "Premium", "approximate": false}, {"name": "Thorne Cal-Mag Citrate 90ct", "retail": 25.0, "servings": 90, "dose": "200mg Ca + 100mg Mg", "quality": "Premium", "approximate": false}, {"name": "Designs for Health Ca-Mg 90ct", "retail": 28.0, "servings": 90, "dose": "250mg Ca + 125mg Mg", "quality": "Premium", "approximate": false}]}, "161": {"note": "DHA omega-3 \u2014 algae-derived vegan form, 60 caps", "comps": [{"name": "Nordic Naturals Algae Omega 60ct", "retail": 32.0, "servings": 60, "dose": "715mg omega-3", "quality": "Premium", "approximate": false}, {"name": "Now Foods DHA Algae 60ct", "retail": 22.0, "servings": 60, "dose": "200mg DHA", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap DHA Ultimate 60sg", "retail": 59.0, "servings": 60, "dose": "700mg DHA", "quality": "Premium", "approximate": false}, {"name": "Carlson Vegan DHA 60sg", "retail": 28.0, "servings": 60, "dose": "200mg DHA", "quality": "Mid-Tier", "approximate": false}]}, "318": {"note": "Aloe vera powder with flavor \u2014 similar whole-food aloe products", "comps": [{"name": "Lily of Desert Aloe Powder 8oz", "retail": 29.99, "servings": "N/A", "dose": "Aloe concentrate", "quality": "Mid-Tier", "approximate": true}, {"name": "NOW Aloe Vera Powder 1lb", "retail": 18.0, "servings": "N/A", "dose": "Whole leaf", "quality": "Budget", "approximate": true}, {"name": "Herbal Answers Aloe Force powder", "retail": 38.0, "servings": "N/A", "dose": "Fermented aloe", "quality": "Premium", "approximate": true}]}, "462": {"note": "CoQ10 100mg \u2014 ubiquinone standard form, 50 caps", "comps": [{"name": "Jarrow CoQ10 100mg 60ct", "retail": 18.0, "servings": 60, "dose": "100mg ubiquinone", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW CoQ10 100mg 90ct", "retail": 22.0, "servings": 90, "dose": "100mg ubiquinone", "quality": "Mid-Tier", "approximate": false}, {"name": "Life Extension Q10 100mg 100ct", "retail": 24.0, "servings": 100, "dose": "100mg ubiquinol", "quality": "Premium", "approximate": false}, {"name": "Thorne CoQ10 60ct", "retail": 39.0, "servings": 60, "dose": "100mg ubiquinone", "quality": "Premium", "approximate": false}, {"name": "Pure Encap CoQ10 120ct", "retail": 44.0, "servings": 120, "dose": "100mg", "quality": "Premium", "approximate": false}]}, "470": {"note": "Glutathione complex \u2014 Setria or similar reduced glutathione", "comps": [{"name": "Healthy Origins Setria 500mg 60ct", "retail": 18.0, "servings": 60, "dose": "500mg Setria GSH", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow Glutathione 500mg 60ct", "retail": 22.0, "servings": 60, "dose": "500mg reduced", "quality": "Mid-Tier", "approximate": false}, {"name": "Life Extension Glutathione 250mg 60ct", "retail": 28.0, "servings": 60, "dose": "250mg", "quality": "Premium", "approximate": false}, {"name": "Thorne Glutathione 60ct", "retail": 47.0, "servings": 60, "dose": "250mg", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Glutathione 250mg 60ct", "retail": 52.0, "servings": 60, "dose": "250mg", "quality": "Premium", "approximate": false}]}, "481": {"note": "Sleep/relaxation blend \u2014 saffron, L-theanine, valerian alternatives", "comps": [{"name": "Gaia Herbs Sleep & Relax 60ct", "retail": 28.0, "servings": 60, "dose": "Valerian+Passion flower", "quality": "Mid-Tier", "approximate": true}, {"name": "Thorne Melaton-5 60ct", "retail": 18.0, "servings": 60, "dose": "5mg melatonin", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Cortisol Calm 60ct", "retail": 58.0, "servings": 60, "dose": "Ashwagandha+L-Theanine", "quality": "Premium", "approximate": true}, {"name": "NOW L-Theanine 200mg 60ct", "retail": 14.99, "servings": 60, "dose": "200mg L-Theanine", "quality": "Budget", "approximate": true}]}, "510": {"note": "NADH coenzyme B3 \u2014 10-20mg per serving", "comps": [{"name": "NOW NADH 10mg 60ct", "retail": 22.0, "servings": 60, "dose": "10mg stabilized", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow NADH 10mg 60ct", "retail": 28.0, "servings": 60, "dose": "10mg sublingual", "quality": "Mid-Tier", "approximate": false}, {"name": "Life Extension NADH 10mg 60ct", "retail": 32.0, "servings": 60, "dose": "10mg", "quality": "Premium", "approximate": false}, {"name": "Thorne NADH 60ct", "retail": 42.0, "servings": 60, "dose": "10mg", "quality": "Premium", "approximate": false}]}, "840": {"note": "L-glutamine capsules \u2014 500-1000mg per cap, 100 caps", "comps": [{"name": "NOW L-Glutamine 500mg 120ct", "retail": 12.0, "servings": 120, "dose": "500mg", "quality": "Budget", "approximate": false}, {"name": "Jarrow L-Glutamine 750mg 120ct", "retail": 16.0, "servings": 120, "dose": "750mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne L-Glutamine 90ct", "retail": 25.0, "servings": 90, "dose": "500mg", "quality": "Premium", "approximate": false}, {"name": "Pure Encap L-Glutamine 90ct", "retail": 28.0, "servings": 90, "dose": "500mg", "quality": "Premium", "approximate": false}]}, "910": {"note": "Creatine monohydrate \u2014 most commoditized supplement", "comps": [{"name": "NOW Creatine Monohydrate 100srv", "retail": 15.0, "servings": 100, "dose": "5g", "quality": "Budget", "approximate": false}, {"name": "Klean Athlete Creatine 60ct", "retail": 28.0, "servings": 60, "dose": "5g NSF", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Creatine NSF 90ct", "retail": 36.0, "servings": 90, "dose": "5g NSF Certified", "quality": "Premium", "approximate": false}, {"name": "Biotics Research Creatine 60ct", "retail": 30.0, "servings": 60, "dose": "5g pharma-grade", "quality": "Premium", "approximate": false}]}, "955": {"note": "Organic/grass-fed whey protein concentrate", "comps": [{"name": "NOW Whey Protein 2lb", "retail": 30.0, "servings": 29, "dose": "25g per serving", "quality": "Budget", "approximate": false}, {"name": "Garden of Life Sport Whey 1.5lb", "retail": 42.0, "servings": 20, "dose": "30g organic", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Whey Protein 1.1lb", "retail": 55.0, "servings": 22, "dose": "22g", "quality": "Premium", "approximate": false}, {"name": "Thorne Whey Protein 1.8lb", "retail": 62.0, "servings": 30, "dose": "22g grass-fed", "quality": "Premium", "approximate": false}]}, "1150": {"note": "Chelated magnesium glycinate \u2014 120-200mg per serving", "comps": [{"name": "NOW Magnesium Glycinate 180ct", "retail": 14.99, "servings": 180, "dose": "180mg", "quality": "Budget", "approximate": false}, {"name": "Doctor's Best Mag Glycinate 120ct", "retail": 21.95, "servings": 120, "dose": "200mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Magnesium 90ct", "retail": 27.5, "servings": 90, "dose": "120mg", "quality": "Premium", "approximate": false}, {"name": "Thorne Magnesium Bisglycinate 90ct", "retail": 33.0, "servings": 90, "dose": "200mg", "quality": "Premium", "approximate": false}]}, "1190": {"note": "Liquid zinc \u2014 8oz bottle for diagnostic zinc taste test", "comps": [{"name": "Zinc Tally by Metagenics 300ml", "retail": 28.0, "servings": "N/A", "dose": "15mg/dose liquid", "quality": "Premium", "approximate": true}, {"name": "NOW Zinc Liquid 8oz", "retail": 12.0, "servings": "N/A", "dose": "15mg/5ml", "quality": "Budget", "approximate": true}, {"name": "Thorne Zinc Picolinate 60ct (caps)", "retail": 18.0, "servings": 60, "dose": "15mg caps", "quality": "Premium", "approximate": true}]}, "1205": {"note": "Vitamin D3 + K2 (MK-7) \u2014 30 caps; key metric is IU D3 + mcg K2", "comps": [{"name": "Sports Research D3+K2 60ct", "retail": 16.95, "servings": 60, "dose": "5000IU D3+100mcg MK-7", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW D3+K2 120ct", "retail": 22.0, "servings": 120, "dose": "5000IU+100mcg MK-7", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne D3+K2 90ct", "retail": 38.0, "servings": 90, "dose": "1000IU+200mcg MK-7", "quality": "Premium", "approximate": false}, {"name": "Pure Encap D3+K2 60ct", "retail": 52.0, "servings": 60, "dose": "5000IU+200mcg MK-7", "quality": "Premium", "approximate": false}]}, "1210": {"note": "Vegan D3 (lichen) + K2 (MK-7 natto) \u2014 60 caps", "comps": [{"name": "Sports Research Vegan D3+K2 60ct", "retail": 19.95, "servings": 60, "dose": "5000IU+100mcg", "quality": "Mid-Tier", "approximate": false}, {"name": "Garden of Life Vegan D3+K2 30ct", "retail": 14.99, "servings": 30, "dose": "2000IU D3+100mcg", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Synergy Vegan D3+K2 60ct", "retail": 34.0, "servings": 60, "dose": "2000IU+100mcg", "quality": "Premium", "approximate": false}, {"name": "Thorne Vegan D3 90ct", "retail": 26.0, "servings": 90, "dose": "1000IU lichen", "quality": "Premium", "approximate": false}]}, "1330": {"note": "Children's D3 \u2014 liquid drops or chewables, 400-1000IU", "comps": [{"name": "Nordic Naturals Baby D3 Drops 365srv", "retail": 14.95, "servings": 365, "dose": "400IU drops", "quality": "Premium", "approximate": false}, {"name": "Carlson Baby D3 400IU Drops 365srv", "retail": 13.99, "servings": 365, "dose": "400IU drops", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne D3 Liquid 250srv", "retail": 17.0, "servings": 250, "dose": "1000IU liquid", "quality": "Premium", "approximate": false}, {"name": "ChildLife D3 Liquid 150srv", "retail": 12.0, "servings": 150, "dose": "400IU liquid", "quality": "Mid-Tier", "approximate": false}]}, "1335": {"note": "D3 oil-based serum \u2014 small format 0.43oz, olive or MCT oil base", "comps": [{"name": "Thorne D3 Liquid 1oz 250srv", "retail": 17.0, "servings": 250, "dose": "1000IU MCT oil", "quality": "Premium", "approximate": true}, {"name": "Nordic Naturals D3 Liquid 1oz", "retail": 18.0, "servings": 365, "dose": "1000IU olive oil", "quality": "Premium", "approximate": true}, {"name": "Pure Encap D3 Liquid 1oz", "retail": 22.0, "servings": 120, "dose": "1000IU olive oil", "quality": "Premium", "approximate": true}]}, "1345": {"note": "EPA+DHA softgels \u2014 90ct; key metric is total omega-3 per serving", "comps": [{"name": "Carlson Super Omega-3 90ct", "retail": 26.0, "servings": 90, "dose": "1200mg omega-3", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Super EPA 90ct", "retail": 38.0, "servings": 90, "dose": "1200mg EPA/DHA", "quality": "Premium", "approximate": false}, {"name": "Nordic Naturals Ultimate Omega 60ct", "retail": 46.0, "servings": 60, "dose": "1280mg omega-3", "quality": "Premium", "approximate": false}, {"name": "Pure Encap EPA/DHA 90ct", "retail": 48.0, "servings": 90, "dose": "900mg omega-3", "quality": "Premium", "approximate": false}]}, "1348": {"note": "Liquid fish oil 8oz \u2014 omega-3 per teaspoon", "comps": [{"name": "Carlson The Very Finest Fish Oil 8oz", "retail": 32.0, "servings": 80, "dose": "1600mg/tsp omega-3", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Omega Plus Liquid 8oz", "retail": 28.0, "servings": 72, "dose": "1000mg/tsp", "quality": "Premium", "approximate": false}, {"name": "Nordic Naturals Omega-3 Liquid 8oz", "retail": 38.0, "servings": 48, "dose": "1560mg/tsp", "quality": "Premium", "approximate": false}, {"name": "Nordic Naturals ProOmega Liquid 8oz", "retail": 66.0, "servings": 80, "dose": "2840mg/tsp", "quality": "Premium", "approximate": false}]}, "1375": {"note": "Delta-tocotrienols from annatto \u2014 tocopherol-free form", "comps": [{"name": "Designs for Health Annatto-E 60ct", "retail": 38.0, "servings": 60, "dose": "125mg tocotrienols", "quality": "Premium", "approximate": false}, {"name": "American Health Tocotrienols 60ct", "retail": 28.0, "servings": 60, "dose": "50mg mixed tocotrienols", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW Full Spectrum Tocotrienols 60ct", "retail": 22.0, "servings": 60, "dose": "50mg mixed", "quality": "Mid-Tier", "approximate": false}]}, "1500": {"note": "Oil of oregano liquid \u2014 Carvacrol content is the key differentiator", "comps": [{"name": "Oreganol P73 0.45oz", "retail": 28.0, "servings": 1, "dose": "73% carvacrol wild Mediterranean", "quality": "Premium", "approximate": false}, {"name": "NOW Oregano Oil 1oz", "retail": 15.0, "servings": 1, "dose": "55% carvacrol", "quality": "Mid-Tier", "approximate": false}, {"name": "Gaia Herbs Oregano Leaf Oil 60ct", "retail": 22.0, "servings": 60, "dose": "50mg 70% carvacrol", "quality": "Mid-Tier", "approximate": false}, {"name": "North American Herb Oregano Oil 1oz", "retail": 20.0, "servings": 1, "dose": "80%+ carvacrol", "quality": "Premium", "approximate": false}]}, "1505": {"note": "Organic castor oil 8oz \u2014 external use; enhanced or plain cold-pressed", "comps": [{"name": "Heritage Store Castor Oil 8oz", "retail": 9.99, "servings": "N/A", "dose": "Organic cold-pressed", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW Castor Oil 8oz", "retail": 8.99, "servings": "N/A", "dose": "Cold-pressed plain", "quality": "Budget", "approximate": false}, {"name": "Queen of the Thrones Castor Oil 8oz", "retail": 22.0, "servings": "N/A", "dose": "Organic+kit", "quality": "Premium", "approximate": true}]}, "1536": {"note": "Proprietary castor oil + essential oil blend \u2014 external use", "comps": [{"name": "Heritage Store Castor Oil + Lavender 4oz", "retail": 12.99, "servings": "N/A", "dose": "EO blend", "quality": "Mid-Tier", "approximate": true}, {"name": "DIY Castor+Rosemary+Lavender blend est.", "retail": 8.0, "servings": "N/A", "dose": "Self-blended", "quality": "Budget", "approximate": true}]}, "2075": {"note": "120-cap comprehensive multivitamin \u2014 ~4 caps per day", "comps": [{"name": "Garden of Life mykind Organics 60ct", "retail": 44.0, "servings": 60, "dose": "2 tabs/day whole-food", "quality": "Premium", "approximate": false}, {"name": "MegaFood One Daily 90ct", "retail": 48.0, "servings": 90, "dose": "2 tabs/day", "quality": "Premium", "approximate": false}, {"name": "Thorne Basic Nutrients III 60ct", "retail": 55.0, "servings": 60, "dose": "2 caps/day active B", "quality": "Premium", "approximate": false}, {"name": "Pure Encap O.N.E. Multi 90ct", "retail": 92.0, "servings": 90, "dose": "1 cap/day", "quality": "Premium", "approximate": false}]}, "2081": {"note": "Daily single multivitamin \u2014 60 caps, 1-2 caps per day", "comps": [{"name": "Garden of Life mykind 60ct", "retail": 34.0, "servings": 60, "dose": "2 tabs whole-food", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Basic Nutrients 2/Day 60ct", "retail": 41.0, "servings": 60, "dose": "2 caps active B", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Daily Nutrients 45ct", "retail": 55.0, "servings": 45, "dose": "4 caps/day", "quality": "Premium", "approximate": false}]}, "2085": {"note": "PQQ + CoQ10 combination \u2014 brain + mitochondrial support", "comps": [{"name": "Life Extension PQQ 10mg 30ct", "retail": 15.0, "servings": 30, "dose": "10mg PQQ only", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow PQQ+CoQ10 30ct", "retail": 29.0, "servings": 30, "dose": "10mg PQQ+100mg CoQ10", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW PQQ 20mg 30ct", "retail": 18.0, "servings": 30, "dose": "20mg PQQ", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap CoQ10+PQQ 60ct", "retail": 56.0, "servings": 60, "dose": "100mg+10mg", "quality": "Premium", "approximate": false}]}, "2086": {"note": "Methylation support blend \u2014 activated B12, methylfolate, choline", "comps": [{"name": "Thorne Methyl-Guard Plus 90ct", "retail": 52.0, "servings": 90, "dose": "5-MTHF+Methyl-B12", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Homocysteine Factors 90ct", "retail": 38.0, "servings": 90, "dose": "5-MTHF+B12", "quality": "Premium", "approximate": true}, {"name": "Jarrow Methyl-B12 + Methyl-Folate 60ct", "retail": 18.0, "servings": 60, "dose": "Methyl-B12+L-5MTHF", "quality": "Mid-Tier", "approximate": true}]}, "2090": {"note": "Deer antler velvet \u2014 IGF-1 precursor, 30 caps (NZ source)", "comps": [{"name": "NOW Deer Antler Velvet 30ct", "retail": 18.0, "servings": 30, "dose": "250mg mycelium", "quality": "Mid-Tier", "approximate": false}, {"name": "Life Extension Velvet Deer Antler 30ct", "retail": 22.0, "servings": 30, "dose": "300mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Nutronics Labs Pure 30ct", "retail": 42.0, "servings": 30, "dose": "250mg NZ extract", "quality": "Premium", "approximate": true}]}, "2091": {"note": "Testosterone/performance blend \u2014 LJ100, cordyceps, maca", "comps": [{"name": "NOW TestoJack 200 60ct", "retail": 28.0, "servings": 60, "dose": "LJ100 200mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Gaia Herbs Male Vitality 60ct", "retail": 35.0, "servings": 60, "dose": "Multi-herb standardized", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Phytisone 60ct", "retail": 54.0, "servings": 60, "dose": "Ashwagandha+Maca blend", "quality": "Premium", "approximate": true}]}, "2093": {"note": "Dual-patented testosterone support \u2014 Testofen + LJ100, 90 caps", "comps": [{"name": "Designs for Health TestoGain 60ct", "retail": 56.0, "servings": 60, "dose": "Dual patented blend", "quality": "Premium", "approximate": false}, {"name": "NOW TestoJack 300 60ct", "retail": 38.0, "servings": 60, "dose": "LJ100+Tribulus+ZMA", "quality": "Mid-Tier", "approximate": false}, {"name": "Gaia Herbs Male Libido 60ct", "retail": 42.0, "servings": 60, "dose": "Multi-botanical", "quality": "Mid-Tier", "approximate": true}, {"name": "Life Extension Optimized Testosterone 30ct", "retail": 34.0, "servings": 30, "dose": "Chrysin+Maca", "quality": "Mid-Tier", "approximate": true}]}, "2094": {"note": "Circulatory enzyme blend \u2014 CoQ10 + systemic enzymes + herbs", "comps": [{"name": "Thorne Cardio Nutrients 90ct", "retail": 62.0, "servings": 90, "dose": "CoQ10+Magnesium+herbs", "quality": "Premium", "approximate": true}, {"name": "DFH CardioVen 60ct", "retail": 48.0, "servings": 60, "dose": "Hawthorn+CoQ10", "quality": "Premium", "approximate": true}, {"name": "Life Extension Cardio Peak 60ct", "retail": 28.0, "servings": 60, "dose": "Standardized hawthorn", "quality": "Mid-Tier", "approximate": true}]}, "2096": {"note": "Amino acid growth hormone blend \u2014 7 cap serving, 105 caps", "comps": [{"name": "NOW L-Arginine 500mg 100ct", "retail": 12.0, "servings": 100, "dose": "500mg L-Arg", "quality": "Budget", "approximate": true}, {"name": "Thorne Amino Complex 246g powder", "retail": 44.0, "servings": 30, "dose": "EAA blend", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Amino-Mag 100ct", "retail": 32.0, "servings": 100, "dose": "Multi-amino blend", "quality": "Premium", "approximate": true}]}, "2099": {"note": "Taurine blend with botanical support \u2014 reishi, hawthorn, prickly pear", "comps": [{"name": "NOW Taurine 500mg 100ct", "retail": 10.0, "servings": 100, "dose": "500mg pure taurine", "quality": "Budget", "approximate": true}, {"name": "Pure Encap Taurine 500mg 90ct", "retail": 22.0, "servings": 90, "dose": "500mg", "quality": "Premium", "approximate": true}, {"name": "Thorne Taurine 90ct", "retail": 18.0, "servings": 90, "dose": "500mg", "quality": "Premium", "approximate": true}]}, "2100": {"note": "L-Tyrosine blend \u2014 tyrosine + adaptogens + AquaMin for cognition", "comps": [{"name": "NOW L-Tyrosine 500mg 120ct", "retail": 14.0, "servings": 120, "dose": "500mg", "quality": "Budget", "approximate": false}, {"name": "Jarrow L-Tyrosine 500mg 100ct", "retail": 18.0, "servings": 100, "dose": "500mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne L-Tyrosine 90ct", "retail": 24.0, "servings": 90, "dose": "500mg", "quality": "Premium", "approximate": false}, {"name": "Pure Encap L-Tyrosine 90ct", "retail": 32.0, "servings": 90, "dose": "500mg", "quality": "Premium", "approximate": false}]}, "2101": {"note": "EAA + Immunell nucleotides mixed berry powder \u2014 unique format", "comps": [{"name": "Thorne Amino Complex Berry 240g", "retail": 44.0, "servings": 30, "dose": "EAA blend 8g", "quality": "Premium", "approximate": true}, {"name": "NOW Sports AM Sports Aminos 180ct", "retail": 18.0, "servings": 90, "dose": "2.5g EAA", "quality": "Budget", "approximate": true}, {"name": "Klean Athlete BCAA+G 60srv", "retail": 32.0, "servings": 60, "dose": "EAA+Glutamine", "quality": "Mid-Tier", "approximate": true}]}, "2102": {"note": "EAA + Immunell nucleotides unflavored \u2014 unique nucleotide complex", "comps": [{"name": "Pure Encap Essential Aminos 180ct", "retail": 52.0, "servings": 90, "dose": "EAA 4g blend", "quality": "Premium", "approximate": true}, {"name": "Thorne Amino Complex Unflavored 225g", "retail": 44.0, "servings": 30, "dose": "EAA 7.5g", "quality": "Premium", "approximate": true}, {"name": "NOW Sports AM Sports Unflavored 180ct", "retail": 18.0, "servings": 90, "dose": "EAA blend", "quality": "Budget", "approximate": true}]}, "2120": {"note": "Immune multi-botanical \u2014 olive leaf, mushrooms, algae complex", "comps": [{"name": "Gaia Herbs Echinacea Goldenseal 60ct", "retail": 28.0, "servings": 60, "dose": "Immune herbs", "quality": "Mid-Tier", "approximate": true}, {"name": "Host Defense MyCommunity 60ct", "retail": 35.0, "servings": 60, "dose": "Multi-mushroom", "quality": "Mid-Tier", "approximate": true}, {"name": "Designs for Health ImmunoVen 60ct", "retail": 42.0, "servings": 60, "dose": "Olive leaf+mushrooms", "quality": "Premium", "approximate": true}]}, "2124": {"note": "Larch arabinogalactan prebiotic \u2014 8oz powder", "comps": [{"name": "NOW Arabinogalactan 16oz powder", "retail": 18.0, "servings": 48, "dose": "5g per serving", "quality": "Budget", "approximate": false}, {"name": "Thermo Fisher Arabinogalactan 100g", "retail": 22.0, "servings": 20, "dose": "Larch AG", "quality": "Mid-Tier", "approximate": false}, {"name": "Designs for Health GalactoMune 200g", "retail": 38.0, "servings": 40, "dose": "5g larch AG", "quality": "Premium", "approximate": false}]}, "2130": {"note": "Weight management multi-botanical \u2014 thermogenic blend", "comps": [{"name": "NOW Thermo Blend 90ct", "retail": 18.0, "servings": 90, "dose": "Green tea+Cayenne", "quality": "Budget", "approximate": true}, {"name": "Gaia Herbs Male Vitality (comparable)", "retail": 35.0, "servings": 60, "dose": "Adaptogen blend", "quality": "Mid-Tier", "approximate": true}, {"name": "Designs for Health Lean & Lean 90ct", "retail": 42.0, "servings": 90, "dose": "Thermogenic complex", "quality": "Premium", "approximate": true}]}, "2150": {"note": "Nerve/brain support botanical blend \u2014 multiple nervous system herbs", "comps": [{"name": "Gaia Herbs Mind Spring Nootropic 60ct", "retail": 32.0, "servings": 60, "dose": "Bacopa+Ginkgo+Rhodiola", "quality": "Mid-Tier", "approximate": true}, {"name": "Thorne Memoractiv 30ct", "retail": 44.0, "servings": 30, "dose": "Multi-nootropic", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Cognitex Basics 30ct", "retail": 55.0, "servings": 30, "dose": "PS+Vinpocetine", "quality": "Premium", "approximate": true}]}, "2158": {"note": "GI antimicrobial blend \u2014 reishi, hyssop, wild garlic (parasite support)", "comps": [{"name": "NOW Candida Support 90ct", "retail": 18.0, "servings": 90, "dose": "Caprylic acid+oregano", "quality": "Budget", "approximate": true}, {"name": "DFH GI MicrobX 60ct", "retail": 42.0, "servings": 60, "dose": "Berberine+botanical", "quality": "Premium", "approximate": true}, {"name": "Metagenics CandiClear 60ct", "retail": 38.0, "servings": 60, "dose": "Multi-botanical GI", "quality": "Premium", "approximate": true}]}, "2160": {"note": "Parasite/microbial stat formula \u2014 Holarrhena bark (rare ingredient)", "comps": [{"name": "Microcidin AF 90ct", "retail": 38.0, "servings": 90, "dose": "Citrus extract antimicrobial", "quality": "Mid-Tier", "approximate": true}, {"name": "Candibactin-AR 60ct", "retail": 44.0, "servings": 60, "dose": "Thyme+Oregano", "quality": "Premium", "approximate": true}, {"name": "NOW Candida Support 90ct", "retail": 18.0, "servings": 90, "dose": "Caprylic acid+herbs", "quality": "Budget", "approximate": true}]}, "2167": {"note": "Acemannan aloe vera caps \u2014 30 caps, 11% acemannan standardized", "comps": [{"name": "NOW Aloe Vera 100ct", "retail": 13.0, "servings": 100, "dose": "250mg 200:1 extract", "quality": "Budget", "approximate": true}, {"name": "Lily of Desert Aloe Caps 60ct", "retail": 18.0, "servings": 60, "dose": "Whole leaf", "quality": "Mid-Tier", "approximate": true}, {"name": "Stockton Aloe One 60ct", "retail": 28.0, "servings": 60, "dose": "Acemannan standardized", "quality": "Premium", "approximate": true}]}, "2171": {"note": "NAC N-Acetyl Cysteine \u2014 standard 500-600mg dose, 60 caps", "comps": [{"name": "NOW NAC 600mg 100ct", "retail": 15.0, "servings": 100, "dose": "600mg", "quality": "Budget", "approximate": false}, {"name": "Jarrow NAC Sustain 600mg 100ct", "retail": 18.0, "servings": 100, "dose": "600mg sustained", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Cysteplus 500mg 90ct", "retail": 24.0, "servings": 90, "dose": "500mg", "quality": "Premium", "approximate": false}, {"name": "Pure Encap NAC 600mg 90ct", "retail": 28.0, "servings": 90, "dose": "600mg", "quality": "Premium", "approximate": false}]}, "2174": {"note": "Allergy/histamine support \u2014 quercetin, nettle, bromelain blends", "comps": [{"name": "Designs for Health Hist-DAO 60ct", "retail": 38.0, "servings": 60, "dose": "DAO enzyme+Quercetin", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Aller-Essentials 120ct", "retail": 36.0, "servings": 120, "dose": "Quercetin+Bromelain", "quality": "Premium", "approximate": true}, {"name": "NOW Aller-7 60ct", "retail": 22.0, "servings": 60, "dose": "7 herb anti-allergy", "quality": "Mid-Tier", "approximate": true}, {"name": "Gaia Herbs Allergy Support 60ct", "retail": 28.0, "servings": 60, "dose": "Nettles+Eyebright", "quality": "Mid-Tier", "approximate": true}]}, "2175": {"note": "Adaptogen blend \u2014 rhodiola (3% rosavins), fermented cordyceps, maca", "comps": [{"name": "Gaia Herbs Adrenal Health 60ct", "retail": 31.49, "servings": 60, "dose": "Rhodiola+Ashwagandha", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW Adrenal Support 90ct", "retail": 18.0, "servings": 90, "dose": "Multi-herb adaptogens", "quality": "Budget", "approximate": false}, {"name": "Thorne Adaptogen 60ct", "retail": 46.0, "servings": 60, "dose": "Rhodiola+Siberian Ginseng", "quality": "Premium", "approximate": false}, {"name": "DFH Adrenotone 90ct", "retail": 52.0, "servings": 90, "dose": "Ashwagandha+Rhodiola", "quality": "Premium", "approximate": true}]}, "2177": {"note": "Betaine HCL for digestive acid support \u2014 90 vegan caps", "comps": [{"name": "Thorne Betaine HCL & Pepsin 225ct", "retail": 38.0, "servings": 225, "dose": "520mg+145mg pepsin", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Betaine HCL+Pepsin 250ct", "retail": 52.0, "servings": 250, "dose": "520mg+130mg pepsin", "quality": "Premium", "approximate": false}, {"name": "NOW Super Enzymes (with HCL) 90ct", "retail": 15.0, "servings": 90, "dose": "HCL+Pepsin+enzymes", "quality": "Budget", "approximate": true}]}, "2178": {"note": "Pepsin / HCL activator \u2014 vegetarian pepsin unique in market", "comps": [{"name": "NOW Betaine HCL+Pepsin 120ct", "retail": 12.0, "servings": 120, "dose": "648mg HCL+130mg pepsin", "quality": "Budget", "approximate": true}, {"name": "Thorne Pepsin-B 60ct", "retail": 22.0, "servings": 60, "dose": "Porcine pepsin", "quality": "Premium", "approximate": true}]}, "2182": {"note": "Bladder/urinary support \u2014 multi-botanical cranberry, D-mannose, herbs", "comps": [{"name": "NOW Cranberry with D-Mannose 90ct", "retail": 15.0, "servings": 90, "dose": "400mg cran+1g mannose", "quality": "Budget", "approximate": true}, {"name": "Life Extension Bladder Support 30ct", "retail": 22.0, "servings": 30, "dose": "D-Mannose+Hibiscus", "quality": "Mid-Tier", "approximate": true}, {"name": "Pure Encap Urinari-X 90ct", "retail": 38.0, "servings": 90, "dose": "Multi-botanical UTI", "quality": "Premium", "approximate": true}]}, "2184": {"note": "Plant-source iron \u2014 whole-food vegan iron with supporting nutrients", "comps": [{"name": "MegaFood Blood Builder 90ct", "retail": 42.0, "servings": 90, "dose": "Whole food iron 26mg", "quality": "Premium", "approximate": false}, {"name": "Garden of Life Raw Iron 30ct", "retail": 18.0, "servings": 30, "dose": "Whole food 22mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap OptiFerin-C 90ct", "retail": 32.0, "servings": 90, "dose": "Iron bisglycinate 15mg", "quality": "Premium", "approximate": false}, {"name": "Thorne Iron Bisglycinate 60ct", "retail": 22.0, "servings": 60, "dose": "25mg bisglycinate", "quality": "Premium", "approximate": false}]}, "2185": {"note": "Blood pressure botanical blend \u2014 TCM herbs and minerals", "comps": [{"name": "NOW Blood Pressure Support 90ct", "retail": 18.0, "servings": 90, "dose": "Multi-herb BP", "quality": "Budget", "approximate": true}, {"name": "DFH Cardiogenics Intensive 90ct", "retail": 52.0, "servings": 90, "dose": "Mag+Taurine+CoQ10", "quality": "Premium", "approximate": true}, {"name": "Life Extension Two-Per-Day 60ct", "retail": 22.0, "servings": 60, "dose": "Comprehensive multi", "quality": "Mid-Tier", "approximate": true}]}, "2188": {"note": "Plant-ferritin iron from curry leaf \u2014 120 caps, gentle on GI", "comps": [{"name": "NOW Iron Complex 100ct", "retail": 12.0, "servings": 100, "dose": "18mg ferrous bisglycinate", "quality": "Budget", "approximate": false}, {"name": "Thorne Iron Bisglycinate 60ct", "retail": 22.0, "servings": 60, "dose": "25mg", "quality": "Premium", "approximate": false}, {"name": "Pure Encap OptiFerin-C 90ct", "retail": 32.0, "servings": 90, "dose": "15mg plant iron", "quality": "Premium", "approximate": false}]}, "2191": {"note": "Cognitive/brain support multi-botanical \u2014 3-pathway brain formula", "comps": [{"name": "NOW Brain Elevate 120ct", "retail": 28.0, "servings": 60, "dose": "Ginkgo+Phosphatidyl+herbs", "quality": "Mid-Tier", "approximate": true}, {"name": "Gaia Herbs Mind Spring 60ct", "retail": 32.0, "servings": 60, "dose": "Bacopa+Ginkgo", "quality": "Mid-Tier", "approximate": true}, {"name": "Thorne Neurochondria 60ct", "retail": 48.0, "servings": 60, "dose": "NAD+Pyrroloquinoline+B2", "quality": "Premium", "approximate": true}]}, "2193": {"note": "Nootropic with NeuroFactor BDNF extract \u2014 120 caps", "comps": [{"name": "NOW Lion's Mane 500mg 60ct", "retail": 20.0, "servings": 60, "dose": "500mg mycelium", "quality": "Mid-Tier", "approximate": true}, {"name": "Thorne Memoractiv 30ct", "retail": 44.0, "servings": 30, "dose": "Multi-nootropic", "quality": "Premium", "approximate": true}, {"name": "Life Extension Neuro Mag 90ct", "retail": 38.0, "servings": 90, "dose": "L-Threonate Mg", "quality": "Mid-Tier", "approximate": true}, {"name": "Pure Encap Cognitex Elite 30ct", "retail": 79.0, "servings": 30, "dose": "PS+Alpha-GPC+Vinpocetine", "quality": "Premium", "approximate": true}]}, "2200": {"note": "B-complex with active coenzyme forms \u2014 P5P, methylfolate, riboflavin-5P", "comps": [{"name": "Jarrow B-Right 100ct", "retail": 18.0, "servings": 100, "dose": "Active B forms balanced", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Basic B 60ct", "retail": 22.0, "servings": 60, "dose": "Active forms", "quality": "Premium", "approximate": false}, {"name": "Pure Encap B-Complex Plus 120ct", "retail": 35.0, "servings": 120, "dose": "All active forms", "quality": "Premium", "approximate": false}, {"name": "NOW B-100 Complex 100ct", "retail": 15.0, "servings": 100, "dose": "Synthetic/standard forms", "quality": "Budget", "approximate": false}]}, "2300": {"note": "Whole-food plant vitamin C \u2014 zero synthetic ascorbic acid", "comps": [{"name": "Garden of Life Vitamin Code C 60ct", "retail": 22.0, "servings": 60, "dose": "500mg whole food", "quality": "Mid-Tier", "approximate": false}, {"name": "MegaFood C Defense 60ct", "retail": 35.0, "servings": 60, "dose": "250mg whole food", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Acerola 8oz powder", "retail": 28.0, "servings": 90, "dose": "Acerola source", "quality": "Premium", "approximate": false}, {"name": "NOW Vitamin C 500mg 250ct", "retail": 12.0, "servings": 250, "dose": "Synthetic ascorbic", "quality": "Budget", "approximate": false}]}, "2305": {"note": "Green tea extract standardized EGCG \u2014 120 caps", "comps": [{"name": "NOW EGCg 400mg 180ct", "retail": 18.0, "servings": 180, "dose": "400mg EGCG", "quality": "Mid-Tier", "approximate": false}, {"name": "Life Extension Mega Green Tea 100ct", "retail": 22.0, "servings": 100, "dose": "325mg EGCG", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow Green Tea 100ct", "retail": 15.0, "servings": 100, "dose": "500mg extract", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Green Tea Extract 120ct", "retail": 32.0, "servings": 120, "dose": "400mg EGCG", "quality": "Premium", "approximate": false}]}, "2310": {"note": "Broken-cell-wall chlorella \u2014 detox green algae, 120 caps", "comps": [{"name": "NOW Chlorella 500mg 200ct", "retail": 18.0, "servings": 200, "dose": "500mg broken-cell", "quality": "Budget", "approximate": false}, {"name": "Jarrow Chlorella 200mg 150ct", "retail": 16.0, "servings": 150, "dose": "200mg cracked-cell", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Chlorella 60ct", "retail": 28.0, "servings": 60, "dose": "300mg", "quality": "Premium", "approximate": false}, {"name": "Thorne Chlorella 240ct", "retail": 38.0, "servings": 240, "dose": "300mg broken-cell", "quality": "Premium", "approximate": false}]}, "2363": {"note": "Joint support with PatActin andrographis \u2014 patented ingredient, 90 caps", "comps": [{"name": "NOW Glucosamine+MSM 180ct", "retail": 22.0, "servings": 180, "dose": "750mg glucosamine", "quality": "Budget", "approximate": false}, {"name": "Jarrow Move & Flex 60ct", "retail": 28.0, "servings": 60, "dose": "1500mg glucosamine", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Advanced Joint Support 60ct", "retail": 52.0, "servings": 60, "dose": "Glucosamine+UC-II", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Glucosamine+Chondroitin 90ct", "retail": 58.0, "servings": 90, "dose": "750mg each", "quality": "Premium", "approximate": false}]}, "2367": {"note": "Bone health formula \u2014 D3, K2, calcium, magnesium, 90 caps", "comps": [{"name": "NOW Bone Strength 240ct", "retail": 22.0, "servings": 240, "dose": "Ca 500mg+D3", "quality": "Budget", "approximate": false}, {"name": "Thorne OsteoVen 120ct", "retail": 45.0, "servings": 120, "dose": "Ca 300mg+Mg", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Osteo-Nutrients 180ct", "retail": 52.0, "servings": 180, "dose": "Ca 300mg+D3+K2", "quality": "Premium", "approximate": false}]}, "2369": {"note": "Immune with dual patented actives \u2014 Immunell+BGF-Immune, 90 caps", "comps": [{"name": "DFH ImmunoBiotics 60ct", "retail": 44.0, "servings": 60, "dose": "Beta-glucan+Lacto", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Beta-Glucan 90ct", "retail": 38.0, "servings": 90, "dose": "Beta-1,3-glucan", "quality": "Premium", "approximate": true}, {"name": "Life Extension Immune Senescence 30ct", "retail": 32.0, "servings": 30, "dose": "Reishi+AHCC", "quality": "Premium", "approximate": true}]}, "2371": {"note": "Adrenal support \u2014 fermented cordyceps + rhodiola, 60 caps", "comps": [{"name": "Gaia Herbs Adrenal Health Daily 60ct", "retail": 31.49, "servings": 60, "dose": "Ashwagandha+Rhodiola", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW Adrenal Support 90ct", "retail": 18.0, "servings": 90, "dose": "Multi-herb adrenal", "quality": "Budget", "approximate": false}, {"name": "Thorne Phytisone 60ct", "retail": 54.0, "servings": 60, "dose": "Ashwagandha+Shilajit", "quality": "Premium", "approximate": true}, {"name": "DFH Adrenotone 90ct", "retail": 52.0, "servings": 90, "dose": "Ashwagandha+Rhodiola", "quality": "Premium", "approximate": false}]}, "2400": {"note": "DHEA 25mg \u2014 hormone precursor, 60 caps", "comps": [{"name": "Natrol DHEA 25mg 300ct", "retail": 8.0, "servings": 300, "dose": "25mg", "quality": "Budget", "approximate": false}, {"name": "NOW DHEA 25mg 90ct", "retail": 12.0, "servings": 90, "dose": "25mg", "quality": "Budget", "approximate": false}, {"name": "Life Extension DHEA 25mg 100ct", "retail": 15.0, "servings": 100, "dose": "25mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne DHEA 25mg 60ct", "retail": 22.0, "servings": 60, "dose": "25mg micronized", "quality": "Premium", "approximate": false}]}, "2402": {"note": "Eye health \u2014 lutein, zeaxanthin, bilberry, astaxanthin blend", "comps": [{"name": "Life Extension MacuGuard 60ct", "retail": 32.0, "servings": 60, "dose": "10mg lutein+2mg zeax", "quality": "Premium", "approximate": false}, {"name": "NOW Ocu Support 90ct", "retail": 22.0, "servings": 90, "dose": "Lutein+Bilberry+Zeax", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap MacuProtect 60ct", "retail": 48.0, "servings": 60, "dose": "10mg lutein", "quality": "Premium", "approximate": false}, {"name": "Thorne Vision Smart 90ct", "retail": 38.0, "servings": 90, "dose": "Lutein+Zeaxanthin", "quality": "Premium", "approximate": false}]}, "2406": {"note": "Women's comprehensive botanical multi \u2014 hormonal + energy support, 90 caps", "comps": [{"name": "Garden of Life Women's Multi 60ct", "retail": 38.0, "servings": 60, "dose": "Multi-herb whole food", "quality": "Mid-Tier", "approximate": false}, {"name": "MegaFood Women's One Daily 90ct", "retail": 52.0, "servings": 90, "dose": "Whole food multi", "quality": "Premium", "approximate": false}, {"name": "Thorne Women's Multi 50+ 60ct", "retail": 55.0, "servings": 60, "dose": "Active B+herbs", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Women's Pure Pack 30ct", "retail": 79.0, "servings": 30, "dose": "Comprehensive daily pack", "quality": "Premium", "approximate": false}]}, "2407": {"note": "Women's hormone balance \u2014 vitex, DIM, phytoestrogen blend, 60 caps", "comps": [{"name": "Gaia Herbs Women's Balance 60ct", "retail": 35.0, "servings": 60, "dose": "Vitex+Milky Oat", "quality": "Mid-Tier", "approximate": false}, {"name": "DFH FemGuard+Balance 120ct", "retail": 52.0, "servings": 120, "dose": "DIM+Vitex+Herbs", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Women's Nutrients 120ct", "retail": 68.0, "servings": 120, "dose": "Phyto-estrogen blend", "quality": "Premium", "approximate": false}]}, "2411": {"note": "Gallbladder/bile support \u2014 phosphatidylcholine, bile herbs, 60 caps", "comps": [{"name": "Standard Process Choline 90ct", "retail": 20.0, "servings": 90, "dose": "Choline from liver", "quality": "Premium", "approximate": true}, {"name": "Thorne Cholic Acid 60ct", "retail": 38.0, "servings": 60, "dose": "Bile acid support", "quality": "Premium", "approximate": true}, {"name": "DFH LV-GB Complex 90ct", "retail": 48.0, "servings": 90, "dose": "Phosphatidylcholine+Herbs", "quality": "Premium", "approximate": true}]}, "2434": {"note": "Single-origin Ethiopian Sidama organic coffee", "comps": [{"name": "Bulletproof Original Ground 12oz", "retail": 18.99, "servings": "N/A", "dose": "Mold-tested medium", "quality": "Premium", "approximate": true}, {"name": "Purity Coffee Whole Bean 12oz", "retail": 24.99, "servings": "N/A", "dose": "Organic mold-tested", "quality": "Premium", "approximate": true}, {"name": "Cometeer Specialty Capsules 16ct", "retail": 32.0, "servings": 16, "dose": "Flash-frozen premium", "quality": "Premium", "approximate": true}, {"name": "Wildkind Single-Origin Sidama 12oz", "retail": 19.0, "servings": "N/A", "dose": "Comparable Ethiopian", "quality": "Mid-Tier", "approximate": false}]}, "2445": {"note": "Cardiovascular enzyme/herbal blend \u2014 CoQ10, hawthorn, tocotrienols", "comps": [{"name": "Thorne Cardio Nutrients 90ct", "retail": 62.0, "servings": 90, "dose": "CoQ10+Mag+Herbs", "quality": "Premium", "approximate": true}, {"name": "DFH CardioVen 60ct", "retail": 48.0, "servings": 60, "dose": "Hawthorn+CoQ10", "quality": "Premium", "approximate": true}, {"name": "Life Extension Cardio Peak 60ct", "retail": 28.0, "servings": 60, "dose": "Hawthorn+Nattokinase", "quality": "Mid-Tier", "approximate": true}]}, "2447": {"note": "Hyssop + EGCG + chlorella complex \u2014 unique botanical combination", "comps": [{"name": "Herb Pharm Hyssop Tincture 1oz", "retail": 13.0, "servings": "N/A", "dose": "Hyssop liquid", "quality": "Budget", "approximate": true}, {"name": "NOW Hyssop 100ct", "retail": 12.0, "servings": 100, "dose": "450mg hyssop herb", "quality": "Budget", "approximate": true}]}, "2451": {"note": "Estrogen balance \u2014 DIM, flaxseed lignans, isoflavones, 60 caps", "comps": [{"name": "Thorne DIM Advantage 60ct", "retail": 38.0, "servings": 60, "dose": "100mg DIM", "quality": "Premium", "approximate": false}, {"name": "Pure Encap DIM Detox 60ct", "retail": 42.0, "servings": 60, "dose": "DIM+glucosinolates", "quality": "Premium", "approximate": false}, {"name": "NOW DIM Complex 60ct", "retail": 18.0, "servings": 60, "dose": "100mg DIM", "quality": "Mid-Tier", "approximate": false}, {"name": "Life Extension Breast Health 30ct", "retail": 28.0, "servings": 30, "dose": "DIM+I3C", "quality": "Mid-Tier", "approximate": false}]}, "2461": {"note": "Kidney/renal support multi-botanical \u2014 fermented cordyceps focus", "comps": [{"name": "NOW Kidney Cleanse 90ct", "retail": 16.0, "servings": 90, "dose": "Dandelion+Uva Ursi", "quality": "Budget", "approximate": true}, {"name": "Herb Pharm Kidney Support 1oz", "retail": 12.0, "servings": "N/A", "dose": "Liquid tincture", "quality": "Mid-Tier", "approximate": true}, {"name": "DFH Kidney Complex 90ct", "retail": 42.0, "servings": 90, "dose": "Multi-botanical renal", "quality": "Premium", "approximate": true}]}, "2470": {"note": "Liver support \u2014 HPLC-verified silymarin 45% + reishi, 60 caps", "comps": [{"name": "NOW Silymarin 300mg 100ct", "retail": 18.0, "servings": 100, "dose": "300mg 80% silymarin", "quality": "Budget", "approximate": false}, {"name": "Thorne Liver Cleanse 60ct", "retail": 32.0, "servings": 60, "dose": "Milk thistle+Dandelion", "quality": "Premium", "approximate": false}, {"name": "Gaia Herbs Liver Health 60ct", "retail": 28.0, "servings": 60, "dose": "Milk thistle+Artichoke", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Silymarin 90ct", "retail": 38.0, "servings": 90, "dose": "250mg 70-80%", "quality": "Premium", "approximate": false}]}, "2480": {"note": "Lung/respiratory botanical blend \u2014 bromelain, NAC, herbs, 60 caps", "comps": [{"name": "Gaia Herbs Lung Health 60ct", "retail": 28.0, "servings": 60, "dose": "Mullein+Plantain+Elecampane", "quality": "Mid-Tier", "approximate": true}, {"name": "NOW Lung Support 90ct", "retail": 15.0, "servings": 90, "dose": "Mullein+Thyme", "quality": "Budget", "approximate": true}, {"name": "DFH Respiraclear 90ct", "retail": 42.0, "servings": 90, "dose": "NAC+Quercetin+Herbs", "quality": "Premium", "approximate": true}]}, "2485": {"note": "Rye pollen extract \u2014 Cernitin-equivalent for prostate health, 60 caps", "comps": [{"name": "Cernilton Pollen Extract 60ct", "retail": 38.0, "servings": 60, "dose": "Cernitin standardized", "quality": "Premium", "approximate": false}, {"name": "NOW Saw Palmetto 90ct", "retail": 15.0, "servings": 90, "dose": "320mg saw palmetto", "quality": "Budget", "approximate": true}, {"name": "Life Extension Ultra Prostate Formula 60ct", "retail": 32.0, "servings": 60, "dose": "Pollen+Lycopene", "quality": "Premium", "approximate": true}]}, "2500": {"note": "Noni fruit concentrate capsules \u2014 60 caps", "comps": [{"name": "NOW Noni 450mg 90ct", "retail": 11.0, "servings": 90, "dose": "450mg 4:1 extract", "quality": "Budget", "approximate": false}, {"name": "Nature's Sunshine Noni 60ct", "retail": 18.0, "servings": 60, "dose": "400mg 100% fruit", "quality": "Mid-Tier", "approximate": false}, {"name": "Hawaiian Health Noni 90ct", "retail": 22.0, "servings": 90, "dose": "500mg Hawaiian", "quality": "Mid-Tier", "approximate": false}]}, "2510": {"note": "Olive leaf immune \u2014 oleuropein standardized, multi-herb, 60 caps", "comps": [{"name": "NOW Olive Leaf Extract 120ct", "retail": 18.0, "servings": 120, "dose": "500mg 6% oleuropein", "quality": "Budget", "approximate": false}, {"name": "Gaia Herbs Olive Leaf 60ct", "retail": 24.0, "servings": 60, "dose": "250mg 18% oleuropein", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Olive Leaf 60ct", "retail": 28.0, "servings": 60, "dose": "500mg 18% oleuropein", "quality": "Premium", "approximate": false}, {"name": "Life Extension Olive Leaf 60ct", "retail": 22.0, "servings": 60, "dose": "500mg 6% oleuropein", "quality": "Mid-Tier", "approximate": false}]}, "2515": {"note": "Pancreas/enzyme support \u2014 120 caps organic botanicals", "comps": [{"name": "Standard Process Pancreatrophin PMG 90ct", "retail": 22.0, "servings": 90, "dose": "Bovine pancreas PMG", "quality": "Premium", "approximate": true}, {"name": "Thorne Pancreatic Enzymes 90ct", "retail": 28.0, "servings": 90, "dose": "Porcine pancreatin", "quality": "Premium", "approximate": true}, {"name": "NOW Pancreatin 2400mg 100ct", "retail": 16.0, "servings": 100, "dose": "Digestive enzyme complex", "quality": "Mid-Tier", "approximate": true}]}, "2520": {"note": "Berberine HCl \u2014 500mg standard dose with synergistic herbs", "comps": [{"name": "NOW Berberine 400mg 90ct", "retail": 22.0, "servings": 90, "dose": "400mg HCl", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Berberine 500mg 60ct", "retail": 28.0, "servings": 60, "dose": "500mg HCl", "quality": "Premium", "approximate": false}, {"name": "Life Extension Berberine+ALA 60ct", "retail": 24.0, "servings": 60, "dose": "400mg+ALA", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Berberine UltraSorb 60ct", "retail": 52.0, "servings": 60, "dose": "550mg enhanced absorb", "quality": "Premium", "approximate": false}]}, "2522": {"note": "Blood sugar \u2014 GlucoVantage DHB + Reducose mulberry leaf patented combo", "comps": [{"name": "NOW Blood Sugar Support 90ct", "retail": 22.0, "servings": 90, "dose": "Multi-herb", "quality": "Budget", "approximate": true}, {"name": "Life Extension Glucose Optimizer 90ct", "retail": 38.0, "servings": 90, "dose": "Multi-ingredient", "quality": "Premium", "approximate": true}, {"name": "Thorne Berberine+ALA 60ct", "retail": 42.0, "servings": 60, "dose": "500mg Berberine", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Glycemic 90ct", "retail": 55.0, "servings": 90, "dose": "Patented complex", "quality": "Premium", "approximate": true}]}, "2530": {"note": "Pregnenolone hormone precursor \u2014 60 caps", "comps": [{"name": "NOW Pregnenolone 10mg 90ct", "retail": 10.0, "servings": 90, "dose": "10mg", "quality": "Budget", "approximate": false}, {"name": "Life Extension Pregnenolone 50mg 100ct", "retail": 15.0, "servings": 100, "dose": "50mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Pregnenolone 50mg 60ct", "retail": 22.0, "servings": 60, "dose": "50mg", "quality": "Premium", "approximate": false}, {"name": "Thorne Pregnenolone 100mg 60ct", "retail": 28.0, "servings": 60, "dose": "100mg micronized", "quality": "Premium", "approximate": false}]}, "2534": {"note": "Beauty supplement \u2014 biotin, keratin, collagen support, 60 caps", "comps": [{"name": "Natrol Biotin 10000mcg 200ct", "retail": 12.0, "servings": 200, "dose": "10000mcg biotin only", "quality": "Budget", "approximate": false}, {"name": "Garden of Life Beauty 30ct", "retail": 32.0, "servings": 30, "dose": "Multi-beauty whole food", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Hair/Skin/Nails 60ct", "retail": 42.0, "servings": 60, "dose": "Biotin+Keratin", "quality": "Premium", "approximate": false}, {"name": "Thorne Beauty Boost 60ct", "retail": 48.0, "servings": 60, "dose": "Multi-beauty formula", "quality": "Premium", "approximate": false}]}, "2536": {"note": "Propolis immune concentrate \u2014 60 caps", "comps": [{"name": "NOW Propolis 1500mg 100ct", "retail": 15.0, "servings": 100, "dose": "1500mg raw propolis", "quality": "Budget", "approximate": false}, {"name": "Bee Health Propolis 60ct", "retail": 18.0, "servings": 60, "dose": "500mg concentrated", "quality": "Mid-Tier", "approximate": false}, {"name": "Life Extension Propolis Extract 30ct", "retail": 22.0, "servings": 30, "dose": "300mg standardized", "quality": "Mid-Tier", "approximate": false}]}, "2541": {"note": "Prostate support \u2014 saw palmetto, beta-sitosterol, cernitin, 90 caps", "comps": [{"name": "NOW Prostate Support 90ct", "retail": 18.0, "servings": 90, "dose": "Saw Palmetto+Zinc", "quality": "Budget", "approximate": false}, {"name": "Gaia Herbs Saw Palmetto 120ct", "retail": 35.0, "servings": 120, "dose": "320mg extract", "quality": "Mid-Tier", "approximate": false}, {"name": "Life Extension Ultra Prostate 60ct", "retail": 32.0, "servings": 60, "dose": "Multi-botanical", "quality": "Premium", "approximate": false}, {"name": "Pure Encap ProstatEx 90ct", "retail": 42.0, "servings": 90, "dose": "Saw palm+Beta-sitosterol", "quality": "Premium", "approximate": false}]}, "2551": {"note": "Iodine + kelp + zeolite for detox/thyroid \u2014 90 caps", "comps": [{"name": "Designs for Health Iodine Plus 90ct", "retail": 28.0, "servings": 90, "dose": "Iodine+Iodide", "quality": "Premium", "approximate": true}, {"name": "NOW Nascent Iodine 2oz", "retail": 18.0, "servings": "N/A", "dose": "Liquid iodine", "quality": "Mid-Tier", "approximate": true}, {"name": "Thorne Iodine+Tyrosine 90ct", "retail": 22.0, "servings": 90, "dose": "Thyroid precursors", "quality": "Premium", "approximate": true}]}, "2570": {"note": "Stomach/GI support botanical blend \u2014 bromelain, green tea, fennel", "comps": [{"name": "Gaia Herbs Sweetbitter 60ct", "retail": 28.0, "servings": 60, "dose": "Digestive bitters", "quality": "Mid-Tier", "approximate": true}, {"name": "Enzymedica Enzyme Defense 90ct", "retail": 32.0, "servings": 90, "dose": "Proteolytic enzymes", "quality": "Mid-Tier", "approximate": true}, {"name": "DFH GI-Zyme 90ct", "retail": 38.0, "servings": 90, "dose": "Multi-enzyme+herbs", "quality": "Premium", "approximate": true}]}, "2575": {"note": "Thyroid botanical support \u2014 kelp, maca, ashwagandha, 60 caps", "comps": [{"name": "Gaia Herbs Thyroid Support 60ct", "retail": 28.0, "servings": 60, "dose": "Ashwagandha+Bladderwrack", "quality": "Mid-Tier", "approximate": true}, {"name": "NOW Thyroid Energy 90ct", "retail": 15.0, "servings": 90, "dose": "Iodine+Tyrosine+herbs", "quality": "Budget", "approximate": true}, {"name": "DFH Thyrotain 120ct", "retail": 52.0, "servings": 120, "dose": "Comprehensive thyroid", "quality": "Premium", "approximate": true}]}, "2578": {"note": "Curcumin with CurQfen enhanced bioavailability \u2014 fenugreek matrix", "comps": [{"name": "NOW Curcumin 665mg 120ct", "retail": 18.0, "servings": 120, "dose": "665mg 95% curcuminoids", "quality": "Budget", "approximate": false}, {"name": "Life Extension BCM-95 Curcumin 60ct", "retail": 24.0, "servings": 60, "dose": "400mg BCM-95", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Meriva 500mg 60ct", "retail": 38.0, "servings": 60, "dose": "500mg Meriva phytosome", "quality": "Premium", "approximate": false}, {"name": "Pure Encap CurcuWIN 500mg 60ct", "retail": 40.0, "servings": 60, "dose": "500mg CurQfen same", "quality": "Premium", "approximate": false}]}, "2580": {"note": "Whole-food organic turmeric capsules \u2014 whole plant not extract", "comps": [{"name": "Garden of Life Turmeric Organic 30ct", "retail": 18.0, "servings": 30, "dose": "Fermented whole-food", "quality": "Mid-Tier", "approximate": false}, {"name": "Gaia Herbs Turmeric 60ct", "retail": 22.0, "servings": 60, "dose": "300mg extract", "quality": "Mid-Tier", "approximate": false}, {"name": "New Chapter Turmeric Force 60ct", "retail": 26.0, "servings": 60, "dose": "Fermented", "quality": "Premium", "approximate": false}]}, "2582": {"note": "Astaxanthin + 5 botanical synergy \u2014 chlorella, cordyceps, prickly pear", "comps": [{"name": "Sports Research Astaxanthin 12mg 30ct", "retail": 22.0, "servings": 30, "dose": "12mg Hawaiian", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow Astaxanthin 12mg 30ct", "retail": 19.0, "servings": 30, "dose": "12mg", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW Astaxanthin 4mg 60ct", "retail": 18.0, "servings": 60, "dose": "4mg", "quality": "Budget", "approximate": false}, {"name": "Pure Encap Astaxanthin 4mg 60ct", "retail": 38.0, "servings": 60, "dose": "4mg", "quality": "Premium", "approximate": false}]}, "2585": {"note": "Certified organic greens powder 10oz \u2014 certified organic, heavy-metal tested", "comps": [{"name": "Amazing Grass Green Superfood 8oz", "retail": 32.0, "servings": 30, "dose": "8g powder", "quality": "Budget", "approximate": false}, {"name": "Garden of Life Raw Organic Greens 7oz", "retail": 38.0, "servings": 30, "dose": "Whole-food greens", "quality": "Mid-Tier", "approximate": false}, {"name": "Organifi Green Juice 9oz", "retail": 70.0, "servings": 30, "dose": "9g premium blend", "quality": "Premium", "approximate": false}, {"name": "Athletic Greens AG1 12oz", "retail": 99.0, "servings": 30, "dose": "12g comprehensive", "quality": "Premium", "approximate": false}]}, "2586": {"note": "Greens capsules \u2014 150 caps (organic greens in capsule form)", "comps": [{"name": "NOW Super Green 180ct", "retail": 18.0, "servings": 90, "dose": "Multi-green blend", "quality": "Budget", "approximate": true}, {"name": "Garden of Life Raw Greens 150ct", "retail": 38.0, "servings": 75, "dose": "Whole-food organic", "quality": "Mid-Tier", "approximate": true}, {"name": "Pure Encap Athletic Greens caps 120ct", "retail": 44.0, "servings": 60, "dose": "Concentrated greens", "quality": "Premium", "approximate": true}]}, "2591": {"note": "Allicin from dual garlic sources + mushroom synergy \u2014 60 caps", "comps": [{"name": "Allimax Allicin 180mg 30ct", "retail": 22.0, "servings": 30, "dose": "Allicin 180mg", "quality": "Premium", "approximate": false}, {"name": "Allicin International 60ct", "retail": 28.0, "servings": 60, "dose": "Allicin 360mg", "quality": "Premium", "approximate": false}, {"name": "NOW Garlic Oil 100ct", "retail": 8.0, "servings": 100, "dose": "Garlic oil 1500mg", "quality": "Budget", "approximate": true}]}, "2600": {"note": "Reishi fruiting body + hyssop + turmeric blend \u2014 90 caps", "comps": [{"name": "NOW Reishi 270mg 100ct", "retail": 15.0, "servings": 100, "dose": "270mg mycelium", "quality": "Budget", "approximate": false}, {"name": "Host Defense Reishi 60ct", "retail": 28.0, "servings": 60, "dose": "1g mycelium+fruitbody", "quality": "Mid-Tier", "approximate": false}, {"name": "Real Mushrooms Reishi 60ct", "retail": 32.0, "servings": 60, "dose": "1g fruiting body 98%", "quality": "Premium", "approximate": false}, {"name": "Gaia Herbs Reishi 60ct", "retail": 35.0, "servings": 60, "dose": "500mg extract", "quality": "Premium", "approximate": false}]}, "2610": {"note": "Lion's Mane mushroom \u2014 cognitive support, fruiting body preferred", "comps": [{"name": "NOW Lion's Mane 500mg 60ct", "retail": 18.0, "servings": 60, "dose": "500mg mycelium", "quality": "Budget", "approximate": false}, {"name": "Host Defense Lion's Mane 60ct", "retail": 28.0, "servings": 60, "dose": "500mg mycelium", "quality": "Mid-Tier", "approximate": false}, {"name": "Real Mushrooms Lion's Mane 60ct", "retail": 32.0, "servings": 60, "dose": "1g fruiting body 25%", "quality": "Premium", "approximate": false}, {"name": "Life Extension Lion's Mane 30ct", "retail": 22.0, "servings": 30, "dose": "500mg extract", "quality": "Mid-Tier", "approximate": false}]}, "2680": {"note": "3-year fermented probiotic softgels \u2014 30 count", "comps": [{"name": "Dr. Ohhira's Probiotic Original 60ct", "retail": 46.0, "servings": 60, "dose": "3-yr fermented TH10", "quality": "Premium", "approximate": false}, {"name": "Garden of Life RAW Probiotics 30ct", "retail": 32.0, "servings": 30, "dose": "85B CFU raw", "quality": "Mid-Tier", "approximate": false}, {"name": "Renew Life Ultimate Flora 50B 30ct", "retail": 28.0, "servings": 30, "dose": "50B CFU 12 strains", "quality": "Mid-Tier", "approximate": false}]}, "2685": {"note": "18-strain probiotic with DE111 patented Bacillus subtilis \u2014 30 caps", "comps": [{"name": "Garden of Life Dr. Formulated 30ct", "retail": 29.0, "servings": 30, "dose": "50B CFU 15 strains", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne FloraSport 30ct", "retail": 38.0, "servings": 30, "dose": "40B CFU 3 strains", "quality": "Premium", "approximate": false}, {"name": "Klaire Labs Ther-Biotic Factor 4 60ct", "retail": 44.0, "servings": 60, "dose": "25B CFU select", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Probiotic 50B 60ct", "retail": 52.0, "servings": 60, "dose": "50B CFU 14 strains", "quality": "Premium", "approximate": false}]}, "2690": {"note": "3-year fermented probiotic softgels \u2014 60 count", "comps": [{"name": "Dr. Ohhira's Professional 60ct", "retail": 56.0, "servings": 60, "dose": "3-yr fermented TH10", "quality": "Premium", "approximate": false}, {"name": "Thorne FloraMend Prime 60ct", "retail": 68.0, "servings": 60, "dose": "5B CFU 3 strains", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Probiotic GI 90ct", "retail": 78.0, "servings": 90, "dose": "20B CFU 7 strains", "quality": "Premium", "approximate": false}]}, "2695": {"note": "Probiotic gummies with DE111 \u2014 consumer-friendly format", "comps": [{"name": "Nature's Bounty Adult Probiotic Gummies 60ct", "retail": 16.0, "servings": 60, "dose": "4B CFU", "quality": "Budget", "approximate": false}, {"name": "Garden of Life Kids Probiotic Gummies 60ct", "retail": 18.0, "servings": 60, "dose": "4B CFU", "quality": "Mid-Tier", "approximate": false}, {"name": "Culturelle Kids Daily Probiotic Gummies 30ct", "retail": 22.0, "servings": 30, "dose": "5B CFU LGG", "quality": "Mid-Tier", "approximate": false}]}, "2750": {"note": "Colostrum IgG caps \u2014 25%+ IgG standardized, ultra-low heat, 90 caps", "comps": [{"name": "NOW Colostrum 480mg 90ct", "retail": 22.0, "servings": 90, "dose": "480mg 30% IgG", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow Colostrum Prime 120ct", "retail": 28.0, "servings": 120, "dose": "480mg bovine", "quality": "Mid-Tier", "approximate": false}, {"name": "Douglas Labs Colostrum 90ct", "retail": 38.0, "servings": 90, "dose": "500mg 40% IgG", "quality": "Premium", "approximate": false}, {"name": "Sovereign Labs Liposomal 30ct", "retail": 75.0, "servings": 30, "dose": "Liposomal delivery", "quality": "Premium", "approximate": false}]}, "2760": {"note": "Colostrum powder 4oz \u2014 zero-additive, nitrogen-flushed", "comps": [{"name": "NOW Colostrum Powder 3oz", "retail": 32.0, "servings": 45, "dose": "3g per serving 30% IgG", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow Colostrum Powder 3.5oz", "retail": 28.0, "servings": 45, "dose": "5g per serving", "quality": "Mid-Tier", "approximate": false}, {"name": "Sovereign Labs Powder 4oz", "retail": 72.0, "servings": 30, "dose": "Liposomal delivery", "quality": "Premium", "approximate": false}]}, "2839": {"note": "Bentonite clay capsules \u2014 internal detox use, 90 caps", "comps": [{"name": "NOW Bentonite Clay 525mg 180ct", "retail": 12.0, "servings": 180, "dose": "525mg", "quality": "Budget", "approximate": false}, {"name": "Yerba Prima Clay 180ct", "retail": 18.0, "servings": 90, "dose": "Liquid clay option", "quality": "Mid-Tier", "approximate": false}, {"name": "Zeoforce Zeolite 180ct", "retail": 25.0, "servings": 60, "dose": "Zeolite+Clay blend", "quality": "Mid-Tier", "approximate": false}]}, "2841": {"note": "Psyllium fiber 180 caps with botanical blend \u2014 10 organic botanicals", "comps": [{"name": "NOW Psyllium Husk 500mg 200ct", "retail": 14.0, "servings": 200, "dose": "500mg husk", "quality": "Budget", "approximate": false}, {"name": "Metamucil Fiber Caps 160ct", "retail": 18.0, "servings": 160, "dose": "Psyllium husk only", "quality": "Budget", "approximate": false}, {"name": "Pure Encap Psyllium Fiber 180ct", "retail": 28.0, "servings": 180, "dose": "500mg husk", "quality": "Premium", "approximate": false}]}, "2850": {"note": "American ginseng Panax quinquefolius \u2014 100% North American root", "comps": [{"name": "NOW American Ginseng 500mg 100ct", "retail": 15.0, "servings": 100, "dose": "500mg root powder", "quality": "Budget", "approximate": false}, {"name": "Solgar Panax Ginseng 520mg 60ct", "retail": 22.0, "servings": 60, "dose": "520mg Asian ginseng", "quality": "Mid-Tier", "approximate": true}, {"name": "Pure Encap American Ginseng 60ct", "retail": 32.0, "servings": 60, "dose": "150mg 20% extract", "quality": "Premium", "approximate": false}]}, "2851": {"note": "L-Theanine 100-200mg \u2014 calm focus, no drowsiness", "comps": [{"name": "NOW L-Theanine 100mg 120ct", "retail": 12.0, "servings": 120, "dose": "100mg", "quality": "Budget", "approximate": false}, {"name": "Jarrow L-Theanine 100mg 60ct", "retail": 15.0, "servings": 60, "dose": "100mg", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow Suntheanine 100mg 60ct", "retail": 18.0, "servings": 60, "dose": "100mg patented Suntheanine", "quality": "Premium", "approximate": false}, {"name": "Pure Encap L-Theanine 200mg 60ct", "retail": 28.0, "servings": 60, "dose": "200mg", "quality": "Premium", "approximate": false}]}, "2855": {"note": "Ashwagandha \u2014 dose and form (KSM-66, Sensoril) matter most", "comps": [{"name": "NOW KSM-66 Ashwagandha 90ct", "retail": 22.0, "servings": 90, "dose": "300mg KSM-66", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow KSM-66 Ashwagandha 60ct", "retail": 18.0, "servings": 60, "dose": "300mg KSM-66", "quality": "Mid-Tier", "approximate": false}, {"name": "Gaia Herbs Ashwagandha Root 60ct", "retail": 26.0, "servings": 60, "dose": "Liquid phyto-cap", "quality": "Premium", "approximate": false}, {"name": "Life Extension Ashwagandha 60ct", "retail": 18.0, "servings": 60, "dose": "125mg Sensoril", "quality": "Mid-Tier", "approximate": false}]}, "2858": {"note": "Fermented ashwagandha \u2014 probiotic fermented for enhanced bioavailability", "comps": [{"name": "New Chapter Ashwagandha Force 60ct", "retail": 26.0, "servings": 60, "dose": "340mg fermented", "quality": "Premium", "approximate": false}, {"name": "Gaia Herbs Ashwagandha Liquid 60ct", "retail": 32.0, "servings": 60, "dose": "Liquid phyto-cap", "quality": "Premium", "approximate": false}, {"name": "NOW KSM-66 Ashwagandha 90ct", "retail": 22.0, "servings": 90, "dose": "300mg KSM-66", "quality": "Mid-Tier", "approximate": false}, {"name": "Jarrow KSM-66 60ct", "retail": 18.0, "servings": 60, "dose": "300mg", "quality": "Mid-Tier", "approximate": false}]}, "2901": {"note": "Fermented turmeric+ginger powder 4.7oz \u2014 fermentation increases bioavail", "comps": [{"name": "New Chapter Turmeric Force 60ct", "retail": 28.0, "servings": 60, "dose": "Fermented 300mg", "quality": "Premium", "approximate": false}, {"name": "Garden of Life Turmeric Organic 30ct", "retail": 22.0, "servings": 30, "dose": "Whole food powder", "quality": "Mid-Tier", "approximate": false}, {"name": "Gaia Herbs TurmericBoost Latte 4.4oz", "retail": 32.0, "servings": 30, "dose": "Turmeric latte powder", "quality": "Premium", "approximate": false}]}, "2902": {"note": "Fermented mushroom blend powder 7.4oz \u2014 6+ mushroom species", "comps": [{"name": "Host Defense MyCommunity Powder 4oz", "retail": 38.0, "servings": 30, "dose": "Mycelium blend powder", "quality": "Mid-Tier", "approximate": false}, {"name": "Real Mushrooms 5 Defenders 7oz", "retail": 36.0, "servings": 30, "dose": "Fruiting body powder", "quality": "Premium", "approximate": false}, {"name": "Om Mushroom Superfood Blend 7.05oz", "retail": 32.0, "servings": 30, "dose": "Multi-mushroom powder", "quality": "Mid-Tier", "approximate": false}]}, "2903": {"note": "Fermented red beet powder 6.3oz \u2014 nitric oxide precursor", "comps": [{"name": "HumanN SuperBeets 5.3oz", "retail": 45.0, "servings": 30, "dose": "5g beet powder", "quality": "Mid-Tier", "approximate": false}, {"name": "NOW Beet Root Powder 12oz", "retail": 18.0, "servings": 48, "dose": "3g per serving", "quality": "Budget", "approximate": false}, {"name": "Organifi Red Juice 9oz", "retail": 70.0, "servings": 30, "dose": "Multi-red superfood", "quality": "Premium", "approximate": false}]}, "2905": {"note": "Fermented greens caps 150ct \u2014 live L. reuteri culture + fermented greens", "comps": [{"name": "Garden of Life RAW Greens 120ct", "retail": 38.0, "servings": 60, "dose": "Whole-food organic caps", "quality": "Mid-Tier", "approximate": true}, {"name": "New Chapter Every Day Greens 96ct", "retail": 32.0, "servings": 48, "dose": "Fermented organic", "quality": "Premium", "approximate": true}, {"name": "Pure Encap Greens Caps 90ct", "retail": 44.0, "servings": 90, "dose": "Concentrated greens", "quality": "Premium", "approximate": true}]}, "2940": {"note": "Apple cider vinegar capsules \u2014 150 caps ACV concentrate", "comps": [{"name": "NOW Apple Cider Vinegar 450mg 180ct", "retail": 12.0, "servings": 180, "dose": "450mg 5% acetic acid", "quality": "Budget", "approximate": false}, {"name": "Bragg ACV Capsules 90ct", "retail": 18.0, "servings": 90, "dose": "750mg ACV", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Apple Cider Vinegar 90ct", "retail": 22.0, "servings": 90, "dose": "ACV+Chromium", "quality": "Premium", "approximate": false}]}, "2944": {"note": "Digestive enzyme with serratiopeptidase \u2014 professional-grade, 60 caps", "comps": [{"name": "Enzymedica Digest Gold 90ct", "retail": 34.0, "servings": 90, "dose": "Multi-enzyme Thera-blend", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Bio-Gest 180ct", "retail": 32.0, "servings": 180, "dose": "HCL+Pepsin+Enzymes", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Digestive Enzymes Ultra 90ct", "retail": 42.0, "servings": 90, "dose": "Full spectrum", "quality": "Premium", "approximate": false}]}, "2945": {"note": "Digestive enzyme + probiotic + prebiotic combo \u2014 60 caps", "comps": [{"name": "Enzymedica Digest Gold+Probiotics 45ct", "retail": 28.0, "servings": 45, "dose": "Thera-blend+probiotic", "quality": "Mid-Tier", "approximate": false}, {"name": "Garden of Life Dr. Enzyme 90ct", "retail": 24.0, "servings": 90, "dose": "Multi-enzyme", "quality": "Mid-Tier", "approximate": false}, {"name": "Thorne Plantizyme 90ct", "retail": 32.0, "servings": 90, "dose": "Plant enzymes", "quality": "Premium", "approximate": false}]}, "2950": {"note": "Systemic proteolytic enzyme blend \u2014 serrapeptase, papain, bromelain", "comps": [{"name": "Wobenzym N 100ct", "retail": 45.0, "servings": 100, "dose": "Systemic enzymes", "quality": "Premium", "approximate": false}, {"name": "NOW Serrapeptase 40000SU 90ct", "retail": 18.0, "servings": 90, "dose": "Serrapeptase only", "quality": "Budget", "approximate": false}, {"name": "Enzymedica Enzyme Defense 90ct", "retail": 38.0, "servings": 90, "dose": "Proteolytic blend", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Bromelain 500mg 60ct", "retail": 28.0, "servings": 60, "dose": "Bromelain 2400GDU", "quality": "Premium", "approximate": false}]}, "3669": {"note": "Mineral serum 8oz external \u2014 AquaMin marine minerals topical", "comps": [{"name": "ConcenTrace Topical Mineral Mist 8oz", "retail": 22.0, "servings": "N/A", "dose": "Ionic mineral spray", "quality": "Mid-Tier", "approximate": true}, {"name": "Ancient Minerals Magnesium Oil 8oz", "retail": 20.0, "servings": "N/A", "dose": "Magnesium chloride", "quality": "Mid-Tier", "approximate": true}, {"name": "OSEA Ocean Minerals Mist 1.7oz", "retail": 48.0, "servings": "N/A", "dose": "Marine mineral serum", "quality": "Premium", "approximate": true}]}, "3670": {"note": "Mineral bath clay + botanical formula 19oz \u2014 therapeutic bath", "comps": [{"name": "Ancient Minerals Mag Bath Flakes 2lb", "retail": 22.0, "servings": "N/A", "dose": "Mag chloride flakes", "quality": "Mid-Tier", "approximate": true}, {"name": "Dr. Teal's Epsom Salt Soaking Solution", "retail": 8.0, "servings": "N/A", "dose": "Epsom+lavender", "quality": "Budget", "approximate": true}, {"name": "Living Clay Detox Clay Bath Powder", "retail": 24.0, "servings": "N/A", "dose": "Calcium bentonite", "quality": "Mid-Tier", "approximate": true}]}, "3672": {"note": "Detox clay pack 5oz \u2014 external use dental/body application", "comps": [{"name": "Aztec Secret Indian Healing Clay 1lb", "retail": 13.0, "servings": "N/A", "dose": "Bentonite clay only", "quality": "Budget", "approximate": true}, {"name": "Living Clay Body Pack 16oz", "retail": 25.0, "servings": "N/A", "dose": "Calcium bentonite", "quality": "Mid-Tier", "approximate": true}, {"name": "Redmond Clay Facial 3oz", "retail": 14.0, "servings": "N/A", "dose": "Bentonite mineral", "quality": "Mid-Tier", "approximate": true}]}, "3678": {"note": "Single-serve body pack \u2014 clay+minerals topical application", "comps": [{"name": "Aztec Secret Healing Clay 1lb", "retail": 13.0, "servings": "N/A", "dose": "Bentonite only", "quality": "Budget", "approximate": true}, {"name": "Living Clay Detox Body Pack", "retail": 24.0, "servings": "N/A", "dose": "Premium clay pack", "quality": "Mid-Tier", "approximate": true}]}, "3685": {"note": "Therapeutic mineral soak 2 lbs \u2014 4-source sea salt blend", "comps": [{"name": "Ancient Minerals Magnesium Flakes 2lb", "retail": 22.0, "servings": "N/A", "dose": "Magnesium chloride", "quality": "Mid-Tier", "approximate": false}, {"name": "Epsoak Epsom Salt 2lb", "retail": 8.0, "servings": "N/A", "dose": "Standard magnesium sulfate", "quality": "Budget", "approximate": false}, {"name": "Dr. Teal's Soaking Solution 3lb", "retail": 12.0, "servings": "N/A", "dose": "Epsom+essential oil", "quality": "Budget", "approximate": false}]}, "4680": {"note": "Himalayan pink salt 12oz \u2014 specialty mineral-rich cooking salt", "comps": [{"name": "Himalayan Chef Pink Salt 12oz", "retail": 8.99, "servings": "N/A", "dose": "Fine grain Himalayan", "quality": "Budget", "approximate": false}, {"name": "Morton Himalayan Pink Salt 17.6oz", "retail": 5.99, "servings": "N/A", "dose": "Standard Himalayan", "quality": "Budget", "approximate": false}, {"name": "Redmond Real Salt 16oz", "retail": 12.99, "servings": "N/A", "dose": "Ancient sea salt", "quality": "Mid-Tier", "approximate": false}, {"name": "SaltWorks Himalayan 16oz", "retail": 10.99, "servings": "N/A", "dose": "Gourmet fine grain", "quality": "Mid-Tier", "approximate": false}]}, "4682": {"note": "Himalayan pink salt 4oz \u2014 small trial size", "comps": [{"name": "Himalayan Chef Pink Salt 4oz", "retail": 4.99, "servings": "N/A", "dose": "Fine grain", "quality": "Budget", "approximate": false}, {"name": "Morton Himalayan Salt 4oz shaker", "retail": 3.99, "servings": "N/A", "dose": "Shaker format", "quality": "Budget", "approximate": false}, {"name": "SaltWorks Himalayan 4oz", "retail": 5.99, "servings": "N/A", "dose": "Gourmet", "quality": "Mid-Tier", "approximate": false}]}, "4691": {"note": "Hawaiian Alaea red salt 12oz \u2014 functional mineral-fortified blend", "comps": [{"name": "SaltWorks Alaea Hawaiian Red Salt 16oz", "retail": 9.99, "servings": "N/A", "dose": "Authentic alaea", "quality": "Mid-Tier", "approximate": false}, {"name": "San Francisco Salt Hawaiian Red 1lb", "retail": 8.99, "servings": "N/A", "dose": "Traditional alaea", "quality": "Mid-Tier", "approximate": false}, {"name": "Hawaii Salt Red Alaea 16oz", "retail": 12.0, "servings": "N/A", "dose": "Authentic Hawaiian", "quality": "Mid-Tier", "approximate": false}]}, "4692": {"note": "Hawaiian Red Seasoning Salt 4oz \u2014 small format", "comps": [{"name": "SaltWorks Alaea Hawaiian Red 4oz", "retail": 5.99, "servings": "N/A", "dose": "Authentic alaea", "quality": "Mid-Tier", "approximate": false}, {"name": "Hawaii Salt Company Red 4oz", "retail": 6.99, "servings": "N/A", "dose": "Traditional alaea", "quality": "Mid-Tier", "approximate": false}]}, "4700": {"note": "Organic ginger powder 4.6oz \u2014 culinary/supplement grade", "comps": [{"name": "Frontier Organic Ginger Powder 1.76oz", "retail": 6.99, "servings": "N/A", "dose": "Organic culinary", "quality": "Budget", "approximate": false}, {"name": "Simply Organic Ginger 3oz", "retail": 7.49, "servings": "N/A", "dose": "Organic culinary", "quality": "Budget", "approximate": false}, {"name": "Starwest Botanicals Organic Ginger 1lb", "retail": 12.0, "servings": "N/A", "dose": "Bulk organic", "quality": "Budget", "approximate": false}, {"name": "Anthony's Organic Ginger 1lb", "retail": 9.99, "servings": "N/A", "dose": "Certified organic", "quality": "Budget", "approximate": false}]}, "4705": {"note": "Raw unfiltered honey 1lb \u2014 Canadian single-source", "comps": [{"name": "Really Raw Honey 1lb", "retail": 22.0, "servings": "N/A", "dose": "Unfiltered US honey", "quality": "Mid-Tier", "approximate": false}, {"name": "Y.S. Organic Bee Farms 1lb", "retail": 16.0, "servings": "N/A", "dose": "Organic raw", "quality": "Mid-Tier", "approximate": false}, {"name": "Nature Nate's Raw Honey 1lb", "retail": 14.0, "servings": "N/A", "dose": "Unfiltered clover", "quality": "Budget", "approximate": false}, {"name": "Wedderspoon Manuka KFactor 16 1lb", "retail": 30.0, "servings": "N/A", "dose": "Manuka NZ", "quality": "Premium", "approximate": false}]}, "4710": {"note": "Organic cayenne pepper 1.5oz spice \u2014 culinary grade", "comps": [{"name": "Frontier Organic Cayenne 1.6oz", "retail": 5.99, "servings": "N/A", "dose": "Organic culinary", "quality": "Budget", "approximate": false}, {"name": "Simply Organic Cayenne 2.89oz", "retail": 5.49, "servings": "N/A", "dose": "USDA organic", "quality": "Budget", "approximate": false}, {"name": "NOW Foods Cayenne 500mg 100ct", "retail": 8.0, "servings": 100, "dose": "Supplement caps", "quality": "Budget", "approximate": true}]}, "4712": {"note": "Organic turmeric powder spice 1.3oz \u2014 culinary grade", "comps": [{"name": "Frontier Organic Turmeric 1.76oz", "retail": 5.49, "servings": "N/A", "dose": "Organic culinary", "quality": "Budget", "approximate": false}, {"name": "Simply Organic Turmeric 2.38oz", "retail": 5.99, "servings": "N/A", "dose": "USDA organic", "quality": "Budget", "approximate": false}, {"name": "Starwest Botanicals Organic Turmeric 1lb", "retail": 9.0, "servings": "N/A", "dose": "Bulk organic", "quality": "Budget", "approximate": false}]}, "4714": {"note": "Organic ginger powder spice 1.5oz \u2014 small format culinary", "comps": [{"name": "Frontier Organic Ginger 1.76oz", "retail": 6.99, "servings": "N/A", "dose": "Organic culinary", "quality": "Budget", "approximate": false}, {"name": "Simply Organic Ginger 1.64oz", "retail": 5.99, "servings": "N/A", "dose": "USDA organic", "quality": "Budget", "approximate": false}, {"name": "McCormick Gourmet Organic Ginger 1.25oz", "retail": 4.99, "servings": "N/A", "dose": "Organic", "quality": "Budget", "approximate": false}]}, "5500": {"note": "Cal-Mag Plus 300 caps \u2014 large supply format Sango coral", "comps": [{"name": "NOW Cal-Mag Citrate 240ct", "retail": 24.0, "servings": 240, "dose": "333mg Ca+167mg Mg", "quality": "Budget", "approximate": false}, {"name": "Thorne Cal-Mag Citrate 90ct", "retail": 25.0, "servings": 90, "dose": "200mg each", "quality": "Premium", "approximate": false}, {"name": "Pure Encap Cal/Mag 240ct", "retail": 58.0, "servings": 240, "dose": "150mg each citrate", "quality": "Premium", "approximate": false}]}, "5501": {"note": "Wild-caught marine collagen powder 10.6oz \u2014 multi-species", "comps": [{"name": "Sports Research Marine Collagen 6.5oz", "retail": 32.0, "servings": 41, "dose": "11g marine collagen", "quality": "Mid-Tier", "approximate": false}, {"name": "Vital Proteins Marine Collagen 7.8oz", "retail": 38.0, "servings": 20, "dose": "12g per serving", "quality": "Mid-Tier", "approximate": false}, {"name": "Ancient Nutrition Multi Collagen 9.25oz", "retail": 39.0, "servings": 20, "dose": "10g multi-type", "quality": "Mid-Tier", "approximate": false}, {"name": "Pure Encap Hydrolyzed Collagen 450g", "retail": 48.0, "servings": 30, "dose": "10g type I/III", "quality": "Premium", "approximate": false}]}, "6502": {"note": "Shelf-stable goat milk for pets 16oz \u2014 digestive support", "comps": [{"name": "Answers Fermented Goat Milk (frozen) 16oz", "retail": 12.0, "servings": 16, "dose": "Raw fermented", "quality": "Premium", "approximate": false}, {"name": "Primal Pet Goat Milk (frozen) 32oz", "retail": 10.0, "servings": 16, "dose": "Raw frozen", "quality": "Mid-Tier", "approximate": false}, {"name": "InClover GoatMilk+ Supplement 5oz", "retail": 28.0, "servings": 30, "dose": "Powdered supplement blend", "quality": "Mid-Tier", "approximate": false}]}, "6504": {"note": "Pumpkin supplement for pets 6oz \u2014 digestive fiber support", "comps": [{"name": "Nummy Tum-Tum Pumpkin 15oz", "retail": 8.99, "servings": 14, "dose": "100% pure pumpkin", "quality": "Budget", "approximate": false}, {"name": "Fruitables Pumpkin 15oz", "retail": 6.99, "servings": 12, "dose": "Pumpkin puree", "quality": "Budget", "approximate": false}, {"name": "Diggin Your Dog Firm Up 4oz", "retail": 14.99, "servings": 24, "dose": "Pumpkin+probiotics", "quality": "Mid-Tier", "approximate": false}]}, "6509": {"note": "Freeze-dried fish pet topper 8oz \u2014 omega-3 rich food enhancement", "comps": [{"name": "Stella & Chewy's Fish & Bird Blend 18oz", "retail": 18.0, "servings": "varies", "dose": "Freeze-dried blend", "quality": "Mid-Tier", "approximate": false}, {"name": "The Honest Kitchen Fish Topper 5.5oz", "retail": 22.0, "servings": "varies", "dose": "Dehydrated seafood", "quality": "Mid-Tier", "approximate": false}, {"name": "Open Farm Freeze-Dried Raw Topper 3.5oz", "retail": 24.0, "servings": "varies", "dose": "Single-source", "quality": "Premium", "approximate": false}]}, "6511": {"note": "Turkey freeze-dried pet food topper 8oz \u2014 digestive + protein support", "comps": [{"name": "Stella & Chewy's Turkey Blend 18oz", "retail": 18.0, "servings": "varies", "dose": "Freeze-dried turkey", "quality": "Mid-Tier", "approximate": false}, {"name": "Open Farm Turkey+Salmon Topper 3.5oz", "retail": 24.0, "servings": "varies", "dose": "Freeze-dried", "quality": "Premium", "approximate": false}, {"name": "Instinct Raw Boost Mixers Turkey 6oz", "retail": 20.0, "servings": "varies", "dose": "Freeze-dried", "quality": "Mid-Tier", "approximate": false}]}};
+
+let products = PRODUCTS_ORIG.map(p => ({...p})); // mutable copy
+let state = {
+  globalPct: 0, globalMinCM: 65,
+  catRules: {}, overrides: {}, deleted: new Set(),
+  filter: 'all', expanded: new Set()
+};
+
+// ── COMPUTE ───────────────────────────────────────────────────────────────
+function computeWS(p) {
+  if (!p.ws) return null;
+  const ov = state.overrides[p.prl];
+  if (ov?.locked) return ov.ws;
+  if (ov?.manual) return ov.ws;
+  const cat = p.cat, cr = state.catRules[cat];
+  let ws = p.ws;
+  if (cr && cr.type !== 'ignore') {
+    if (cr.type === 'pct') ws = p.ws * (1 + cr.val/100);
+    else if (cr.type === 'minCM' && p.cogs) {
+      const minWS = p.cogs / (1 - cr.val/100);
+      ws = Math.max(p.ws * (1 + state.globalPct/100), minWS);
+    }
+  } else {
+    if (state.globalPct !== 0) ws = p.ws * (1 + state.globalPct/100);
+    if (state.globalMinCM > 0 && p.cogs) {
+      const minWS = p.cogs / (1 - state.globalMinCM/100);
+      ws = Math.max(ws, minWS);
+    }
+  }
+  return Math.round(ws * 100) / 100;
+}
+function getCM(cogs, ws) { return (!cogs || !ws) ? null : (1 - cogs/ws)*100; }
+function cmColor(cm) {
+  if (cm===null) return '#e8e8e4';
+  if (cm>=80) return '#639922'; if (cm>=65) return '#1D9E75';
+  if (cm>=50) return '#BA7517'; return '#D85A30';
+}
+
+// ── SUMMARY ───────────────────────────────────────────────────────────────
+function updateSummary() {
+  const active = products.filter(p => !state.deleted.has(p.prl));
+  let above=0,below=0,sumCM=0,nCM=0,sumOldWS=0,sumNewWS=0,nWS=0,locked=0,manual=0;
+  active.forEach(p => {
+    const nws = computeWS(p);
+    const cm = getCM(p.cogs, nws);
+    if (cm !== null) { cm >= state.globalMinCM ? above++ : below++; sumCM+=cm; nCM++; }
+    if (p.ws && nws) { sumOldWS+=p.ws; sumNewWS+=nws; nWS++; }
+    const ov = state.overrides[p.prl];
+    if (ov?.locked) locked++;
+    else if (ov?.manual) manual++;
+  });
+  document.getElementById('s-total').textContent = active.length;
+  document.getElementById('s-above').textContent = above;
+  document.getElementById('s-below').textContent = below;
+  document.getElementById('s-avgcm').textContent = nCM ? (sumCM/nCM).toFixed(1)+'%' : '–';
+  document.getElementById('s-avgws').textContent = nWS ? '$'+(sumNewWS/nWS).toFixed(2) : '–';
+  document.getElementById('s-uplift').textContent = nWS ? (((sumNewWS-sumOldWS)/sumOldWS)*100).toFixed(1)+'%' : '–';
+  document.getElementById('s-locked').textContent = locked;
+  document.getElementById('s-manual').textContent = manual;
+  document.getElementById('s-deleted').textContent = state.deleted.size;
+  document.getElementById('topbar-meta').textContent = active.length+' products · '+state.deleted.size+' deleted · Updated COGs baked in · Confidential';
+  // Restore chips
+  const rw = document.getElementById('restore-wrap');
+  rw.innerHTML = '';
+  if (state.deleted.size > 0) {
+    rw.style.display = 'flex'; rw.style.gap = '4px'; rw.style.flexWrap = 'wrap';
+    state.deleted.forEach(prl => {
+      const p = products.find(x=>x.prl===prl);
+      if (!p) return;
+      const chip = document.createElement('span');
+      chip.className = 'deleted-chip';
+      chip.title = 'Click to restore '+p.name;
+      chip.textContent = '↺ '+p.name.slice(0,20)+(p.name.length>20?'…':'');
+      chip.onclick = () => restoreProduct(prl);
+      rw.appendChild(chip);
+    });
+  } else { rw.style.display = 'none'; }
+}
+
+// ── CONTROLS ─────────────────────────────────────────────────────────────
+function onGP(v) { state.globalPct=parseFloat(v); document.getElementById('v-gp').textContent=(v>=0?'+':'')+v+'%'; refresh(); }
+function onGC(v) { state.globalMinCM=parseFloat(v); document.getElementById('v-gc').textContent=v+'%'; refresh(); }
+function addCatRule() {
+  const cat=document.getElementById('cat-sel').value;
+  const type=document.getElementById('cat-type').value;
+  const val=parseFloat(document.getElementById('cat-val').value);
+  if (!cat) return;
+  state.catRules[cat]={type,val};
+  renderCatRules(); refresh();
+}
+function removeCatRule(cat) { delete state.catRules[cat]; renderCatRules(); refresh(); }
+function renderCatRules() {
+  document.getElementById('cat-rules').innerHTML = Object.entries(state.catRules).map(([cat,r]) =>
+    `<div class="cat-rule-item">
+      <span style="font-size:10px;font-weight:500;flex:1">${cat}</span>
+      <span style="font-size:10px;color:var(--muted)">${r.type==='pct'?'+'+r.val+'%':r.type==='minCM'?'≥'+r.val+'% CM':'ignore'}</span>
+      <button class="btn-icon" onclick="removeCatRule('${cat}')">✕</button>
+    </div>`).join('');
+}
+function applyPreset(pct, minCM) {
+  state.globalPct=pct; state.globalMinCM=minCM;
+  document.getElementById('global-pct').value=pct;
+  document.getElementById('v-gp').textContent='+'+pct+'%';
+  document.getElementById('global-cm').value=minCM;
+  document.getElementById('v-gc').textContent=minCM+'%';
+  refresh();
+}
+function resetAll() {
+  state={globalPct:0,globalMinCM:65,catRules:{},overrides:{},deleted:new Set(),filter:'all',expanded:new Set()};
+  document.getElementById('global-pct').value=0; document.getElementById('v-gp').textContent='0%';
+  document.getElementById('global-cm').value=65; document.getElementById('v-gc').textContent='65%';
+  // Restore all original COGS
+  PRODUCTS_ORIG.forEach(orig => {
+    const p = products.find(x => x.prl === orig.prl);
+    if (p) p.cogs = orig.cogs;
+  });
+  renderCatRules(); refresh();
+}
+function applyAll() { refresh(); }
+
+// ── PRODUCT CONTROLS ──────────────────────────────────────────────────────
+function setWS(prl, val) {
+  const ws = parseFloat(val);
+  if (isNaN(ws) || ws <= 0) return;
+  if (!state.overrides[prl]) state.overrides[prl]={};
+  state.overrides[prl].ws = Math.round(ws*100)/100;
+  state.overrides[prl].manual = true;
+  liveUpdateCard(prl, ws);
+  updateSummary(); renderGrid();
+}
+function onCogsChange(prl, val) {
+  const newCogs = parseFloat(val);
+  const p = products.find(x => x.prl === prl);
+  if (!p) return;
+  if (isNaN(newCogs) || newCogs < 0) return;
+  p.cogs = newCogs;
+  // Also update the original for reset purposes
+  const orig = PRODUCTS_ORIG.find(x => x.prl === prl);
+  // Note: we only update the working copy, not the original
+  // so reset restores original COGS from PRODUCTS_ORIG
+  // Sync any other cogs inputs for this product
+  ['cogsinput-'+prl, 'gcogs-'+prl].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && parseFloat(el.value) !== newCogs) el.value = newCogs.toFixed(2);
+  });
+  // Recalculate and refresh this card and grid
+  liveUpdateCard(prl, computeWS(p) || p.ws || 0);
+  updateSummary();
+  renderGrid();
+}
+function toggleLock(prl) {
+  if (!state.overrides[prl]) state.overrides[prl]={};
+  const ov = state.overrides[prl];
+  if (ov.locked) { ov.locked=false; }
+  else { ov.locked=true; const p=products.find(x=>x.prl===prl); if (!ov.ws) ov.ws=computeWS(p)||p.ws; }
+  updateCard(prl); updateSummary(); renderGrid();
+}
+function resetProduct(prl) {
+  delete state.overrides[prl];
+  // Restore original COGS
+  const orig = PRODUCTS_ORIG.find(x => x.prl === prl);
+  const p = products.find(x => x.prl === prl);
+  if (orig && p) p.cogs = orig.cogs;
+  updateCard(prl); updateSummary(); renderGrid();
+}
+function deleteProduct(prl) {
+  state.deleted.add(prl);
+  const card = document.getElementById('card-'+prl);
+  if (card) card.classList.add('deleted');
+  updateSummary(); renderGrid();
+}
+function restoreProduct(prl) {
+  state.deleted.delete(prl);
+  const card = document.getElementById('card-'+prl);
+  if (card) card.classList.remove('deleted');
+  updateSummary(); renderGrid();
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+function setFilter(f,btn) {
+  state.filter=f;
+  document.querySelectorAll('#tab-cards .filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderCards();
+}
+function hasApproxComp(p) {
+  const c = COMPETITORS[p.prl];
+  return c && c.comps && c.comps.some(x=>x.approximate);
+}
+function getFiltered() {
+  const q=(document.getElementById('card-search')?.value||'').toLowerCase();
+  return products.filter(p => {
+    if (state.deleted.has(p.prl)) return false;
+    if (q && !p.name.toLowerCase().includes(q)) return false;
+    const nws=computeWS(p), cm=getCM(p.cogs,nws);
+    if (state.filter==='below' && (cm===null||cm>=state.globalMinCM)) return false;
+    if (state.filter==='changed' && (!nws||!p.ws||Math.abs(nws-p.ws)<0.01)) return false;
+    if (state.filter==='locked' && !state.overrides[p.prl]?.locked) return false;
+    if (state.filter==='approx' && !hasApproxComp(p)) return false;
+    return true;
+  });
+}
+
+// ── COMPETITOR BAR ────────────────────────────────────────────────────────
+function buildCompBar(p, nws) {
+  const c = COMPETITORS[p.prl];
+  if (!c || !c.comps || !c.comps.length) return '<div class="no-comp">No comparable competitor data — proprietary/unique formula (ND line or organ-specific)</div>';
+  const retail = nws * 2, map = nws * 2.2;
+  const allPrices = c.comps.map(x=>x.retail);
+  const minP = Math.min(...allPrices, retail * 0.7);
+  const maxP = Math.max(...allPrices, map * 1.1);
+  const range = maxP - minP || 1;
+  const pct = v => Math.max(2, Math.min(98, ((v-minP)/range)*100));
+  const hasApprox = c.comps.some(x=>x.approximate);
+  const ticks = c.comps.map(x=>`<div class="range-tick" style="left:${pct(x.retail)}%" title="${x.name}: $${x.retail}${x.approximate?' (comparable)':''}"></div>`).join('');
+  const retailDot = `<div class="range-dot retail" style="left:${pct(retail)}%" title="PRL Retail: $${retail.toFixed(2)}"></div>`;
+  const mapDot = `<div class="range-dot map" style="left:${pct(map)}%" title="PRL MAP: $${map.toFixed(2)}"></div>`;
+  const rows = c.comps.map(x=>`<div class="comp-row">
+    <span class="comp-name">${x.name}</span>
+    ${x.approximate?'<span class="approx-badge">⚠ approx</span>':''}
+    <span class="comp-dose">${typeof x.servings==='number'?x.servings+'srv · ':''} ${x.dose||''}</span>
+    <span class="comp-price">$${x.retail.toFixed(2)}</span>
+    <span class="comp-quality ${x.quality.replace('-','')}">${x.quality}</span>
+  </div>`).join('');
+  return `<div>
+    <div class="range-title">${c.note||''}</div>
+    <div class="range-bar-wrap">
+      <div class="range-bar" style="position:relative">${ticks}${retailDot}${mapDot}</div>
+      <div class="range-labels"><span class="range-lbl">$${minP.toFixed(0)}</span><span class="range-lbl">$${((minP+maxP)/2).toFixed(0)}</span><span class="range-lbl">$${maxP.toFixed(0)}</span></div>
+    </div>
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Retail ($${retail.toFixed(2)})</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>MAP ($${map.toFixed(2)})</div>
+      <div class="legend-item" style="color:rgba(0,0,0,.2)">▌ Competitors</div>
+    </div>
+    ${hasApprox?'<div class="approx-note">⚠ Items marked "approx" are closest available — different format/source. Verify before using for pricing decisions.</div>':''}
+    <div class="comp-list" style="margin-top:5px">${rows}</div>
+  </div>`;
+}
+
+// ── CARD BUILD ────────────────────────────────────────────────────────────
+function buildCard(p) {
+  const ov = state.overrides[p.prl]||{};
+  const nws = computeWS(p);
+  const oldCM = getCM(p.cogs, p.ws);
+  const newCM = getCM(p.cogs, nws);
+  const isLocked = ov.locked, isManual = ov.manual && !ov.locked;
+  const hasOverride = !!(ov.ws || ov.locked);
+  const changed = nws && p.ws && Math.abs(nws-p.ws)>0.005;
+  const isDeleted = state.deleted.has(p.prl);
+  const expanded = state.expanded.has(p.prl);
+  const minWS = p.cogs ? Math.max(p.cogs/0.5, 1) : 1;
+  const maxWS = Math.max((p.ws||10)*3.5, 200);
+  const sliderVal = nws || p.ws || minWS;
+  const retail = nws ? nws*2 : null;
+  const map = nws ? nws*2.2 : null;
+  const dol = (nws&&p.ws) ? nws-p.ws : null;
+  const pctC = (nws&&p.ws) ? (nws/p.ws-1)*100 : null;
+  const hasApprox = hasApproxComp(p);
+  const catColorMap = {'Proprietary ND':'teal','Organ Support':'blue','Food & Spice':'amber','Pet Products':'amber','Fermented Powders':'teal','Minerals & Vitamins':'blue'};
+  const catColor = catColorMap[p.cat]||'blue';
+  const compHtml = nws ? buildCompBar(p, nws) : buildCompBar(p, p.ws||10);
+  return `<div class="pcard${isLocked?' locked':''}${expanded?' expanded':''}${isDeleted?' deleted':''}" id="card-${p.prl}">
+  <div class="pcard-head">
+    <div style="flex:1;min-width:0">
+      <div class="pcard-name">${p.name}</div>
+      <div class="pcard-prl">PRL #${p.prl}</div>
+    </div>
+    <div class="pcard-badges">
+      <span class="tag ${catColor}" style="font-size:9px">${p.cat}</span>
+      ${newCM!==null?`<span class="tag ${newCM>=state.globalMinCM?'green':'red'}">${newCM.toFixed(1)}% CM</span>`:''}
+      ${isLocked?'<span class="tag purple">🔒</span>':isManual?'<span class="tag purple">✏</span>':''}
+      ${hasApprox?'<span class="tag amber" title="Some competitor data is approximate">⚠</span>':''}
+    </div>
+    <div class="pcard-actions">
+      ${hasOverride?`<button class="btn-icon" title="Reset this product to auto" onclick="resetProduct(${p.prl})">↺</button>`:''}
+      <button class="btn-icon ${isLocked?'locked':''}" title="${isLocked?'Unlock':'Lock price'}" onclick="toggleLock(${p.prl})">${isLocked?'🔒':'🔓'}</button>
+      <button class="btn-icon delete" title="Remove product" onclick="deleteProduct(${p.prl})">🗑</button>
+    </div>
+  </div>
+  <div class="pcard-metrics">
+    <div class="metric"><div class="metric-lbl">COGS <span style="font-size:8px;color:var(--amber);font-weight:400">(editable)</span></div>
+      <div style="display:flex;align-items:center;gap:2px">
+        <span style="font-size:12px;color:var(--muted)">$</span>
+        <input type="number" id="cogsinput-${p.prl}"
+          value="${p.cogs?p.cogs.toFixed(2):''}" placeholder="0.00" min="0" step="0.01"
+          style="width:60px;padding:2px 4px;border:1px solid #e8e8e4;border-radius:5px;font-size:12px;font-weight:500;color:#1a1a18;background:#fffef8;outline:none"
+          onfocus="this.style.borderColor='var(--amber)'"
+          onblur="this.style.borderColor='#e8e8e4';onCogsChange(${p.prl},this.value)"
+          onkeydown="if(event.key==='Enter'){this.blur()}"
+          title="Edit COGS — recalculates CM% instantly">
+      </div>
+    </div>
+    <div class="metric"><div class="metric-lbl">Curr WS</div><div class="metric-val">${p.ws?'$'+p.ws.toFixed(2):'–'}</div></div>
+    <div class="metric"><div class="metric-lbl">New WS</div><div class="metric-val ${changed?'changed':''}" id="mv-ws-${p.prl}">${nws?'$'+nws.toFixed(2):'–'}</div></div>
+    <div class="metric"><div class="metric-lbl">Retail ×2</div><div class="metric-val" id="mv-rt-${p.prl}">${retail?'$'+retail.toFixed(2):'–'}</div></div>
+    <div class="metric"><div class="metric-lbl">MAP ×2.2</div><div class="metric-val" id="mv-map-${p.prl}">${map?'$'+map.toFixed(2):'–'}</div></div>
+    ${dol!==null?`<div class="metric"><div class="metric-lbl">Uplift</div><div class="metric-val ${dol>=0?'good':'warn'}" id="mv-ul-${p.prl}">${dol>=0?'+':''}$${Math.abs(dol).toFixed(2)} (${pctC>=0?'+':''}${pctC.toFixed(1)}%)</div></div>`:''}
+  </div>
+  ${(newCM!==null&&p.cogs)?`<div class="cm-bar-wrap">
+    <div class="cm-label-row">
+      <span class="cm-label" id="mv-cmlbl-${p.prl}">CM%: ${oldCM?oldCM.toFixed(1)+'% → ':''}${newCM.toFixed(1)}%</span>
+      <span class="cm-label">Target: ${state.globalMinCM}%</span>
+    </div>
+    <div class="cm-bar">
+      <div class="cm-fill" id="mv-cmfill-${p.prl}" style="width:${Math.min(100,Math.max(0,newCM)).toFixed(1)}%;background:${cmColor(newCM)}"></div>
+      <div class="cm-target-line" style="left:${state.globalMinCM}%"></div>
+    </div>
+  </div>`:''}
+  ${(p.cogs&&p.ws)?`<div class="slider-wrap">
+    <div class="slider-row">
+      <span style="font-size:9px;color:var(--hint)">$${minWS.toFixed(0)}</span>
+      <input type="range" min="${minWS.toFixed(2)}" max="${maxWS.toFixed(2)}" step="0.25" value="${sliderVal.toFixed(2)}" id="sl-${p.prl}"
+        oninput="onSliderInput(${p.prl},this.value)" ${isLocked?'disabled':''} style="flex:1">
+      <span style="font-size:9px;color:var(--hint)">$${maxWS.toFixed(0)}</span>
+      <input type="number" class="ws-input" id="wsinput-${p.prl}" value="${sliderVal.toFixed(2)}" min="${minWS.toFixed(2)}" max="${maxWS.toFixed(2)}" step="0.25"
+        ${isLocked?'disabled':''}
+        onchange="onInputChange(${p.prl},this.value)"
+        oninput="syncSlider(${p.prl},this.value)"
+        title="Type exact wholesale price">
+    </div>
+    <div class="slider-sub" id="mv-sub-${p.prl}">
+      <span>WS: $${sliderVal.toFixed(2)}</span><span>Retail: $${(sliderVal*2).toFixed(2)}</span><span>MAP: $${(sliderVal*2.2).toFixed(2)}</span>
+    </div>
+  </div>`:''}
+  <button class="comp-toggle" onclick="toggleExpand(${p.prl})">${expanded?'▲ Hide':'▼ Show'} competitor data</button>
+  <div class="comp-section">${compHtml}</div>
+</div>`;
+}
+
+function onSliderInput(prl, val) {
+  const ws = parseFloat(val);
+  const inp = document.getElementById('wsinput-'+prl);
+  if (inp) inp.value = ws.toFixed(2);
+  setWS(prl, ws);
+}
+function onInputChange(prl, val) {
+  const ws = parseFloat(val);
+  if (isNaN(ws)||ws<=0) return;
+  const sl = document.getElementById('sl-'+prl);
+  if (sl) { sl.min = Math.min(parseFloat(sl.min), ws); sl.max = Math.max(parseFloat(sl.max), ws); sl.value = ws; }
+  setWS(prl, ws);
+}
+function syncSlider(prl, val) {
+  const ws = parseFloat(val);
+  if (isNaN(ws)||ws<=0) return;
+  const sl = document.getElementById('sl-'+prl);
+  if (sl) sl.value = ws;
+  liveUpdateCard(prl, ws);
+}
+function liveUpdateCard(prl, ws) {
+  const p = products.find(x=>x.prl===prl); if (!p) return;
+  const cm = getCM(p.cogs, ws);
+  const oldCM = getCM(p.cogs, p.ws);
+  const dol = p.ws ? ws - p.ws : null;
+  const pctC = p.ws ? (ws/p.ws-1)*100 : null;
+  const update = (id, val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+  update('mv-ws-'+prl, '$'+ws.toFixed(2));
+  update('mv-rt-'+prl, '$'+(ws*2).toFixed(2));
+  update('mv-map-'+prl, '$'+(ws*2.2).toFixed(2));
+  if (dol!==null) update('mv-ul-'+prl, (dol>=0?'+':'')+'$'+Math.abs(dol).toFixed(2)+' ('+(pctC>=0?'+':'')+pctC.toFixed(1)+'%)');
+  const fill = document.getElementById('mv-cmfill-'+prl);
+  if (fill && cm!==null) { fill.style.width=Math.min(100,Math.max(0,cm)).toFixed(1)+'%'; fill.style.background=cmColor(cm); }
+  update('mv-cmlbl-'+prl, 'CM%: '+(oldCM?oldCM.toFixed(1)+'% → ':'')+cm.toFixed(1)+'%');
+  const sub = document.getElementById('mv-sub-'+prl);
+  if (sub) sub.innerHTML = `<span>WS: $${ws.toFixed(2)}</span><span>Retail: $${(ws*2).toFixed(2)}</span><span>MAP: $${(ws*2.2).toFixed(2)}</span>`;
+}
+
+function updateCard(prl) {
+  const p = products.find(x=>x.prl===prl); if (!p) return;
+  const card = document.getElementById('card-'+prl); if (!card) return;
+  const wasExpanded = card.classList.contains('expanded');
+  card.outerHTML = buildCard(p);
+  const newCard = document.getElementById('card-'+prl);
+  if (newCard && wasExpanded) { newCard.classList.add('expanded'); const btn=newCard.querySelector('.comp-toggle'); if(btn) btn.textContent='▲ Hide competitor data'; }
+}
+function toggleExpand(prl) {
+  state.expanded.has(prl) ? state.expanded.delete(prl) : state.expanded.add(prl);
+  const card = document.getElementById('card-'+prl);
+  if (card) { card.classList.toggle('expanded', state.expanded.has(prl)); const btn=card.querySelector('.comp-toggle'); if(btn) btn.textContent=(state.expanded.has(prl)?'▲ Hide':'▼ Show')+' competitor data'; }
+}
+
+// ── CARDS RENDER ──────────────────────────────────────────────────────────
+function renderCards() {
+  const filtered = getFiltered();
+  const wrap = document.getElementById('cards-wrap'); if (!wrap) return;
+  const byCat = {};
+  filtered.forEach(p=>{ if(!byCat[p.cat]) byCat[p.cat]=[]; byCat[p.cat].push(p); });
+  wrap.innerHTML = Object.entries(byCat).sort(([a],[b])=>a.localeCompare(b)).map(([cat,prods])=>
+    `<div class="section-hdr">${cat} <span>(${prods.length})</span></div>
+    <div class="cards-grid">${prods.map(buildCard).join('')}</div>`
+  ).join('') || '<div class="no-data">No products match this filter.</div>';
+}
+
+// ── GRID RENDER ───────────────────────────────────────────────────────────
+function renderGrid() {
+  const q=(document.getElementById('grid-search')?.value||'').toLowerCase();
+  const catF=document.getElementById('grid-cat')?.value||'';
+  const sortF=document.getElementById('grid-sort')?.value||'prl';
+  const showDel=document.getElementById('show-deleted')?.checked;
+  let prods = products.filter(p => {
+    if (!showDel && state.deleted.has(p.prl)) return false;
+    if (q && !p.name.toLowerCase().includes(q) && !String(p.prl).includes(q)) return false;
+    if (catF && p.cat !== catF) return false;
+    return true;
+  });
+  prods.sort((a,b) => {
+    if (sortF==='prl') return a.prl-b.prl;
+    if (sortF==='name') return a.name.localeCompare(b.name);
+    const ca=getCM(a.cogs,computeWS(a))||0, cb=getCM(b.cogs,computeWS(b))||0;
+    if (sortF==='cm') return ca-cb;
+    if (sortF==='cm-desc') return cb-ca;
+    const da=(computeWS(a)||0)-(a.ws||0), db=(computeWS(b)||0)-(b.ws||0);
+    if (sortF==='uplift') return db-da;
+    if (sortF==='ws') return (a.ws||0)-(b.ws||0);
+    return 0;
+  });
+  const body=document.getElementById('grid-body'); if (!body) return;
+  let tOldWS=0,tNewWS=0,n=0,tOldCM=0,tNewCM=0,nc=0;
+  body.innerHTML = prods.map(p => {
+    const isDel = state.deleted.has(p.prl);
+    const nws = computeWS(p);
+    const oldCM = getCM(p.cogs, p.ws);
+    const newCM = getCM(p.cogs, nws);
+    const dol = (nws&&p.ws)?nws-p.ws:null;
+    const pctC = (nws&&p.ws)?(nws/p.ws-1)*100:null;
+    const isLocked=state.overrides[p.prl]?.locked;
+    const isManual=state.overrides[p.prl]?.manual&&!isLocked;
+    const hasOv=state.overrides[p.prl]?.ws;
+    if (p.ws&&nws&&!isDel){tOldWS+=p.ws;tNewWS+=nws;n++;}
+    if (oldCM!==null&&!isDel){tOldCM+=oldCM;nc++;}
+    if (newCM!==null&&!isDel) tNewCM+=newCM;
+    return `<tr class="${isLocked?'locked-row':''}${isDel?' deleted-row':''}" id="gtr-${p.prl}">
+      <td>${p.prl}</td>
+      <td class="td-name" title="${p.name}">${p.name}</td>
+      <td style="max-width:110px;overflow:hidden;text-overflow:ellipsis"><span class="tag blue" style="font-size:9px">${p.cat}</span></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:2px">
+          <span style="font-size:11px;color:var(--muted)">$</span>
+          <input type="number" id="gcogs-${p.prl}"
+            value="${p.cogs?p.cogs.toFixed(2):''}" placeholder="0.00" min="0" step="0.01"
+            style="width:64px;padding:2px 5px;border:1px solid #e8e8e4;border-radius:4px;font-size:11px;background:#fffef8;outline:none"
+            onfocus="this.style.borderColor='var(--amber)'"
+            onblur="this.style.borderColor='#e8e8e4';onCogsChange(${p.prl},this.value)"
+            onkeydown="if(event.key==='Enter'){this.blur()}"
+            title="Edit COGS">
+        </div>
+      </td>
+      <td>${p.ws?'$'+p.ws.toFixed(2):'–'}</td>
+      <td>
+        <input class="grid-ws-input" value="${nws?nws.toFixed(2):''}" placeholder="${nws?'':'N/A'}"
+          ${isLocked||!p.ws||!p.cogs?'disabled':''}
+          onchange="onInputChange(${p.prl},this.value)" title="Edit to override price">
+        ${hasOv?`<button class="grid-restore-btn" onclick="resetProduct(${p.prl})" title="Reset to auto">↺</button>`:''}
+      </td>
+      <td class="${dol!==null&&dol>0?'cell-green':dol!==null&&dol<0?'cell-red':''}">${dol!==null?(dol>=0?'+':'')+' $'+Math.abs(dol).toFixed(2):'–'}</td>
+      <td class="${pctC!==null&&pctC>0?'cell-green':pctC!==null&&pctC<0?'cell-red':''}">${pctC!==null?(pctC>=0?'+':'')+pctC.toFixed(1)+'%':'–'}</td>
+      <td>${nws?'$'+(nws*2).toFixed(2):'–'}</td>
+      <td>${nws?'$'+(nws*2.2).toFixed(2):'–'}</td>
+      <td><div class="cell-cm">
+        <div class="mini-bar"><div class="mini-fill" style="width:${oldCM?Math.min(100,oldCM).toFixed(0):0}%;background:${cmColor(oldCM)}"></div></div>
+        <span class="${oldCM>=65?'cell-green':'cell-red'}">${oldCM!==null?oldCM.toFixed(1)+'%':'–'}</span>
+      </div></td>
+      <td><div class="cell-cm">
+        <div class="mini-bar"><div class="mini-fill" style="width:${newCM?Math.min(100,newCM).toFixed(0):0}%;background:${cmColor(newCM)}"></div></div>
+        <span class="${newCM>=65?'cell-green':'cell-red'}">${newCM!==null?newCM.toFixed(1)+'%':'–'}</span>
+      </div></td>
+      <td style="font-size:10px">${isDel?'<span style="color:var(--red)">Deleted</span>':isLocked?'<span style="color:var(--purple)">🔒 Locked</span>':isManual?'<span style="color:var(--purple)">✏ Manual</span>':'<span style="color:var(--hint)">Auto</span>'}</td>
+      <td><button class="grid-delete-btn" title="${isDel?'Restore':'Delete'}" onclick="${isDel?'restoreProduct':'deleteProduct'}(${p.prl})">${isDel?'↺':'🗑'}</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="14" class="no-data">No products.</td></tr>';
+  const footer=document.getElementById('grid-footer');
+  if (footer && n>0) {
+    footer.innerHTML = `<td colspan="3" style="color:var(--muted)">Summary (${n} active products)</td>
+      <td>–</td><td>$${(tOldWS/n).toFixed(2)}</td>
+      <td class="cell-green">$${(tNewWS/n).toFixed(2)}</td>
+      <td class="cell-green">+$${((tNewWS-tOldWS)/n).toFixed(2)}</td>
+      <td class="cell-green">+${((tNewWS-tOldWS)/tOldWS*100).toFixed(1)}%</td>
+      <td>$${(tNewWS*2/n).toFixed(2)}</td><td>$${(tNewWS*2.2/n).toFixed(2)}</td>
+      <td>${(tOldCM/nc).toFixed(1)}%</td><td class="cell-green">${(tNewCM/nc).toFixed(1)}%</td>
+      <td colspan="2">–</td>`;
+  }
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  const hdr = ['PRL#','Product','Category','COGS','Curr WS','New WS','$ Incr','% Incr','Retail x2','MAP x2.2','Curr CM%','New CM%','Status','Deleted'];
+  const rows = products.map(p => {
+    const nws=computeWS(p), oldCM=getCM(p.cogs,p.ws), newCM=getCM(p.cogs,nws);
+    const dol=(nws&&p.ws)?nws-p.ws:null, pctC=(nws&&p.ws)?(nws/p.ws-1)*100:null;
+    const isLocked=state.overrides[p.prl]?.locked, isManual=state.overrides[p.prl]?.manual&&!isLocked;
+    return [p.prl,'"'+p.name+'"',p.cat,p.cogs||'',p.ws||'',nws||'',
+      dol!==null?dol.toFixed(2):'', pctC!==null?pctC.toFixed(1)+'%':'',
+      nws?(nws*2).toFixed(2):'', nws?(nws*2.2).toFixed(2):'',
+      oldCM!==null?oldCM.toFixed(1)+'%':'', newCM!==null?newCM.toFixed(1)+'%':'',
+      isLocked?'Locked':isManual?'Manual':'Auto',
+      state.deleted.has(p.prl)?'Yes':''].join(',');
+  });
+  const a=document.createElement('a');
+  a.href='data:text/csv,'+encodeURIComponent([hdr.join(','),...rows].join('\n'));
+  a.download='PRL_Pricing_2026.csv'; a.click();
+}
+
+// ── TAB / INIT ─────────────────────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-body').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  if (id==='grid') renderGrid();
+}
+function refresh() { renderCards(); renderGrid(); updateSummary(); }
+function init() {
+  const cats = [...new Set(products.map(p=>p.cat))].sort();
+  const catSel=document.getElementById('cat-sel'), gridCat=document.getElementById('grid-cat');
+  cats.forEach(c => { catSel.innerHTML+=`<option value="${c}">${c}</option>`; gridCat.innerHTML+=`<option value="${c}">${c}</option>`; });
+  refresh();
+}
+init();
+</script>
+</body>
+</html>
