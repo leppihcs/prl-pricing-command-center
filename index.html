@@ -349,7 +349,9 @@ function updateSummary() {
   active.forEach(p => {
     const nws = computeWS(p);
     const cm = getCM(p.cogs, nws);
-    if (cm !== null) { cm >= state.globalMinCM ? above++ : below++; sumCM+=cm; nCM++; }
+    const origCM = getCM(p.cogs, p.ws);
+    const classifyCM = origCM !== null ? origCM : cm;
+    if (cm !== null) { classifyCM!==null && classifyCM < state.globalMinCM ? below++ : above++; sumCM+=cm; nCM++; }
     if (p.ws && nws) { sumOldWS+=p.ws; sumNewWS+=nws; nWS++; }
     const ov = state.overrides[p.prl];
     if (ov?.locked) locked++;
@@ -501,7 +503,9 @@ function getFiltered() {
     if (state.deleted.has(p.prl)) return false;
     if (q && !p.name.toLowerCase().includes(q)) return false;
     const nws=computeWS(p), cm=getCM(p.cogs,nws);
-    if (state.filter==='below' && (cm===null||cm>=state.globalMinCM)) return false;
+    const origCM=getCM(p.cogs,p.ws);
+    const classifyCM=origCM!==null?origCM:cm;
+    if (state.filter==='below' && (classifyCM===null||classifyCM>=state.globalMinCM)) return false;
     if (state.filter==='changed' && (!nws||!p.ws||Math.abs(nws-p.ws)<0.01)) return false;
     if (state.filter==='locked' && !state.overrides[p.prl]?.locked) return false;
     if (state.filter==='approx' && !hasApproxComp(p)) return false;
