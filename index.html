@@ -322,13 +322,13 @@ function computeWS(p) {
   if (cr && cr.type !== 'ignore') {
     if (cr.type === 'pct') ws = p.ws * (1 + cr.val/100);
     else if (cr.type === 'minCM' && p.cogs) {
-      const minWS = p.cogs / (1 - cr.val/100);
+      const minWS = Math.ceil(p.cogs / (1 - cr.val/100) * 100) / 100;
       ws = Math.max(p.ws * (1 + state.globalPct/100), minWS);
     }
   } else {
     if (state.globalPct !== 0) ws = p.ws * (1 + state.globalPct/100);
     if (state.globalMinCM > 0 && p.cogs) {
-      const minWS = p.cogs / (1 - state.globalMinCM/100);
+      const minWS = Math.ceil(p.cogs / (1 - state.globalMinCM/100) * 100) / 100;
       ws = Math.max(ws, minWS);
     }
   }
