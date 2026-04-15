@@ -4,9 +4,9 @@ Live, collaborative HTML document. Source of truth: GitHub. Team edits via Stack
 
 ## URLs (fill in after setup)
 
-- **Live site (view-only)**: _paste GitHub Pages URL here_
-- **Team edit link (StackBlitz)**: _paste StackBlitz URL here — share this with teammates_
-- **GitHub repo**: _paste repo URL here_
+- **Live site (view-only)**: https://leppihcs.github.io/prl-pricing-command-center/ — public, no sign-in required
+- **Team edit link (StackBlitz)**: _paste StackBlitz URL here — share this with collaborators_
+- **GitHub repo**: https://github.com/leppihcs/prl-pricing-command-center (private — add collaborators at Settings → Collaborators)
 
 ## How updates flow
 
